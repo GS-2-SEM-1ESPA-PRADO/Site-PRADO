@@ -1,0 +1,34 @@
+:root {
+  --color-primary: #71b549;
+  --color-primary-light: #acd494;
+  --color-primary-dark: #3b5e26;
+  --color-primary-muted: #6e9c6a;
+  --color-accent: #5f3733;
+  --color-bege: #ccc1a7;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+a,
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
