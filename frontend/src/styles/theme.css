@@ -17,18 +17,12 @@ html {
   scroll-behavior: smooth;
 }
 
-a,
-button,
-input,
-textarea,
-select {
-  font: inherit;
-}
 
-a {
-  color: inherit;
-}
 
 button {
   cursor: pointer;
 }
+
+/* body {
+  font-family: 'Inter', sans-serif;
+} */
