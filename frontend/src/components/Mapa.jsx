@@ -16,11 +16,11 @@ L.Icon.Default.mergeOptions({
     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+const FALLBACK = [-15.7801, -47.9292];
+
 export default function Mapa() {
   const [position, setPosition] = useState(null);
   const [weather, setWeather] = useState(null);
-
-  const FALLBACK = [-15.7801, -47.9292]; // Brasília
 
   // SUA CHAVE OPENWEATHER
   const API_KEY = "6943afc37743b85438ca0d9959fdb141";
@@ -51,7 +51,7 @@ export default function Mapa() {
   if (!position) {
     return (
       <div
-        className="flex items-center justify-center bg-[#1a2e10]/60 h-[300px] sm:h-[450px] lg:h-[600px] w-full"
+        className="flex h-[320px] w-full items-center justify-center bg-[#1a2e10]/60 sm:h-[450px] lg:h-[600px]"
       >
         <p className="text-white/60 text-sm">Carregando mapa...</p>
       </div>
@@ -59,11 +59,11 @@ export default function Mapa() {
   }
 
   return (
-    <div className="relative w-full h-[300px] sm:h-[450px] lg:h-[600px]">
+    <div className="relative h-[320px] w-full sm:h-[450px] lg:h-[600px]">
 
       {/* CARD CLIMA */}
       {weather && (
-        <div className="absolute top-4 left-4 z-[1000] bg-[#1a2e10]/90 backdrop-blur-sm border border-white/10 rounded-xl p-4 text-white shadow-xl min-w-[190px]">
+        <div className="absolute left-3 top-3 z-[1000] max-w-[calc(100%-24px)] rounded-xl border border-white/10 bg-[#1a2e10]/90 p-3 text-white shadow-xl backdrop-blur-sm sm:left-4 sm:top-4 sm:min-w-[190px] sm:p-4">
           <p className="text-xs uppercase tracking-widest text-[#71b549] font-bold mb-2">
             Clima atual
           </p>
@@ -72,11 +72,11 @@ export default function Mapa() {
             <img
               src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
               alt=""
-              className="w-14 h-14"
+              className="h-12 w-12 sm:h-14 sm:w-14"
             />
 
             <div>
-              <p className="text-3xl font-bold leading-none">
+              <p className="text-2xl font-bold leading-none sm:text-3xl">
                 {Math.round(weather.main.temp)}°
               </p>
 

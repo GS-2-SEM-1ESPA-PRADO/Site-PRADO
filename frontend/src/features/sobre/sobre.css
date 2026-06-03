@@ -1,0 +1,28 @@
+.sobre-page h1,
+.sobre-page h2,
+.sobre-page h3,
+.sobre-page p {
+  margin: 0;
+}
+
+.sobre-grid-overlay {
+  background-image:
+    linear-gradient(rgb(215 239 152 / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(215 239 152 / 0.07) 1px, transparent 1px);
+  background-size: 76px 76px;
+  mask-image: linear-gradient(90deg, transparent, black 16%, black 86%, transparent);
+}
+
+.sobre-scan-map {
+  background:
+    linear-gradient(90deg, rgb(215 239 152 / 0.16) 1px, transparent 1px),
+    linear-gradient(rgb(215 239 152 / 0.12) 1px, transparent 1px),
+    linear-gradient(180deg, transparent, rgb(8 24 17 / 0.82));
+  background-size: 54px 54px, 54px 54px, auto;
+}
+
+@media (max-width: 640px) {
+  .sobre-grid-overlay {
+    background-size: 52px 52px;
+  }
+}

@@ -1,158 +1,386 @@
-import { MapPin, Play, Satellite, BarChart2, Leaf, Bell } from "lucide-react";
-import Mapa from "../../components/Mapa.jsx"
+import {
+  Activity,
+  ArrowRight,
+  ArrowUpRight,
+  BellRing,
+  CheckCircle2,
+  CloudRain,
+  CloudSun,
+  DatabaseZap,
+  Droplets,
+  Gauge,
+  Layers,
+  Leaf,
+  MapPinned,
+  MonitorSmartphone,
+  MousePointer2,
+  Orbit,
+  Radar,
+  Route,
+  Satellite,
+  ScanLine,
+  ShieldCheck,
+  Smartphone,
+  Sprout,
+  Sun,
+  ThermometerSun,
+  Wind,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+import Mapa from "../../components/Mapa.jsx";
+import fieldLandscape from "../../assets/field-landscape.avif";
 
-const ndviLegend = [
-  { label: "0.8", sub: "Alto", color: "#4ade80" },
-  { label: "0.4", sub: "Médio", color: "#facc15" },
-  { label: "0.0", sub: "Baixo", color: "#ef4444" },
+const heroStats = [
+  { label: "Solo", value: "camadas 0-9 cm", icon: Sprout },
+  { label: "Clima", value: "próximas 24h", icon: CloudSun },
+  { label: "Risco", value: "alertas práticos", icon: BellRing },
+  { label: "Mapa", value: "talhões coloridos", icon: MapPinned },
 ];
 
-const bottomStats = [
-  { icon: <Satellite className="w-5 h-5" />, label: "Imagens de satélite", sub: "da NASA" },
-  { icon: <BarChart2 className="w-5 h-5" />, label: "Indicadores", sub: "climáticos" },
-  { icon: <Leaf className="w-5 h-5" />, label: "Recomendações", sub: "para sua lavoura" },
-  { icon: <Bell className="w-5 h-5" />, label: "Alertas e avisos", sub: "importantes" },
+const cockpitMetrics = [
+  { label: "Irrigação", value: "Moderada", tone: "bg-[#e0a72f]" },
+  { label: "Pulverização", value: "Aguardar", tone: "bg-[#ef6b4a]" },
+  { label: "Radiação", value: "Alta", tone: "bg-[#71b549]" },
+  { label: "Solo", value: "Estável", tone: "bg-[#2f80ed]" },
+];
+
+const signalFlow = [
+  {
+    icon: Satellite,
+    title: "Dados do céu",
+    text: "Satélites e modelos climáticos entregam variáveis de clima, solo, vento e radiação.",
+  },
+  {
+    icon: DatabaseZap,
+    title: "Processamento PRADO",
+    text: "O sistema cruza os dados e calcula níveis de atenção para cada decisão agrícola.",
+  },
+  {
+    icon: MonitorSmartphone,
+    title: "Leitura no celular",
+    text: "O produtor recebe uma explicação curta, visual e pronta para usar no campo.",
+  },
+];
+
+const decisionCards = [
+  {
+    icon: Droplets,
+    title: "Irrigar ou esperar",
+    text: "Umidade do solo, evapotranspiração e VPD viram uma orientação simples para uso da água.",
+  },
+  {
+    icon: Wind,
+    title: "Pulverizar com segurança",
+    text: "Vento, rajadas e chuva indicam quando a aplicação deve acontecer ou ser adiada.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Antecipar riscos",
+    text: "Fungos, molhamento foliar e estresse térmico aparecem antes de virarem prejuízo.",
+  },
+  {
+    icon: Activity,
+    title: "Acompanhar vigor",
+    text: "Radiação, graus-dia e temperatura ajudam a entender o ritmo da lavoura.",
+  },
+];
+
+const dashboardFeatures = [
+  { icon: Layers, label: "Camadas", text: "Mapa, satélite, relevo e talhões." },
+  { icon: MousePointer2, label: "Clique no mapa", text: "Qualquer ponto vira análise." },
+  { icon: ScanLine, label: "Grade visual", text: "Cores mostram onde olhar primeiro." },
+  { icon: Gauge, label: "Indicadores", text: "Cards resumem a recomendação." },
+];
+
+const indicators = [
+  { icon: CloudRain, label: "Chuva 24h", value: "mm acumulados" },
+  { icon: ThermometerSun, label: "Estresse", value: "sensação e VPD" },
+  { icon: Sun, label: "Radiação", value: "energia disponível" },
+  { icon: Leaf, label: "Fungos", value: "risco por umidade" },
+  { icon: Route, label: "Maquinário", value: "entrada na área" },
+  { icon: Smartphone, label: "Campo", value: "consulta rápida" },
+];
+
+const fieldBenefits = [
+  "Menos tempo decifrando números técnicos.",
+  "Mais confiança para irrigar, pulverizar e manejar.",
+  "Leitura visual para pequenos e médios produtores.",
+  "Dashboard responsivo para usar no campo.",
 ];
 
 function Home() {
   return (
-    <>
-    
-      <section className="relative w-full overflow-hidden flex flex-col">
-        {/* Imagem de fundo */}
+    <main className="bg-[#f7f4ea] text-[#16281e]">
+      <section className="relative isolate overflow-hidden bg-[#102417] text-white">
         <img
-          src="https://plus.unsplash.com/premium_photo-1661963442576-16ce45d2cd55?q=80&w=1623&auto=format&fit=crop"
+          className="absolute inset-0 z-0 h-full w-full object-cover"
+          src={fieldLandscape}
           alt=""
-          className="absolute inset-0 w-full object-cover -z-10"
         />
-        {/* Overlay escuro geral para legibilidade */}
-        <div className="absolute inset-0 bg-[#1a2e10]/60 -z-10" />
-        {/* GRID PRINCIPAL */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 w-full max-w-[1440px] mx-auto px-10  gap-10 max-[980px]:px-6 max-sm:px-4 max-sm:pt-10">
-          {/* COLUNA ESQUERDA */}
-          <div className="relative flex flex-col justify-center gap-6 max-lg:items-start py-16">
-            {/* Gradiente branco atrás dos textos */}
-            {/* <div
-              className="absolute inset-0 rounded-2xl pointer-events-none"
-              style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 60%, transparent 100%)",
-                backdropFilter: "blur(2px)",
-                WebkitBackdropFilter: "blur(2px)",
-                border: "1px solid rgba(255,255,255,0.12)",
-              }}
-            /> */}
-            {/* Badge */}
-            <div className="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#3b5e26]/60 border border-[#acd494]/30 w-fit">
-              <Satellite className="w-3.5 h-3.5 text-[#acd494]" strokeWidth={2} />
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-[#acd494]">
-                Tecnologia NASA para o campo
-              </span>
-            </div>
-            {/* Headline */}
-            <h1
-              className="relative text-[clamp(2rem,4vw,3.25rem)] font-extrabold leading-[1.1] tracking-tight text-white max-w-[520px]"
-              style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
-            >
-              Informações do espaço para melhores decisões{" "}
-              <span className="text-[#71b549]">no seu plantio</span>
+        <div className="absolute inset-0 z-0 bg-[linear-gradient(90deg,rgb(8_30_18_/_0.94),rgb(14_45_25_/_0.72)_48%,rgb(13_42_26_/_0.28))]" />
+        <div className="absolute inset-x-0 bottom-0 z-0 h-40 bg-[linear-gradient(0deg,#f7f4ea,transparent)]" />
+
+        <div className="relative z-10 mx-auto max-w-[1320px] px-6 pb-10 pt-20 lg:px-10 lg:pb-16 lg:pt-24">
+          <div className="max-w-[820px]">
+            <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#acd494]/25 bg-white/[0.08] px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-[#dcefcf] backdrop-blur max-[420px]:items-start max-[420px]:whitespace-normal">
+              <Orbit className="h-3.5 w-3.5" />
+              Inteligência espacial para pequenos e médios produtores
+            </span>
+
+            <h1 className="mt-7 max-w-[920px] font-serif text-[clamp(2.55rem,8vw,7.6rem)] font-black leading-[0.9] tracking-normal text-white">
+              O campo visto do alto.
+              <span className="block text-[#acd494]">A decisão feita no chão.</span>
             </h1>
-            {/* Subtítulo */}
-            <p className="relative text-[15px] text-white/75 leading-relaxed max-w-[400px]">
-              Dados de satélite da NASA transformados em recomendações simples
-              para aumentar sua produtividade e cuidar melhor da sua lavoura.
+
+            <p className="mt-7 max-w-[660px] text-lg leading-8 text-white/78">
+              O PRADO traduz dados de clima, solo, vento e radiação em recomendações
+              simples para o produtor decidir melhor, sem precisar interpretar números
+              brutos.
             </p>
-            {/* CTAs */}
-            <div className="relative flex items-center gap-3 flex-wrap mt-1">
-              <button
-                type="button"
-                className="inline-flex items-center gap-2.5 h-12 px-6 rounded-xl bg-[#71b549] text-white text-sm font-bold shadow-[0_4px_24px_rgb(113_181_73_/_35%)] transition-all duration-200 hover:bg-[#5f9e3a] hover:shadow-[0_6px_28px_rgb(113_181_73_/_45%)] active:scale-[0.98]"
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                className="inline-flex h-13 min-h-[52px] items-center justify-center gap-2 rounded-xl bg-[#71b549] px-6 text-sm font-extrabold text-white no-underline shadow-[0_18px_36px_rgb(113_181_73_/_32%)] transition hover:bg-[#5f9e3a] max-[420px]:w-full"
+                to="/dashboard"
               >
-                <MapPin className="w-4 h-4" strokeWidth={2.5} />
-                Ver mapa da minha área
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2.5 h-12 px-6 rounded-xl bg-white/10 border border-white/25 text-white text-sm font-semibold transition-all duration-200 hover:bg-white/20 hover:border-white/40 active:scale-[0.98]"
+                Abrir dashboard
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                className="inline-flex h-13 min-h-[52px] items-center justify-center gap-2 rounded-xl border border-white/18 bg-white/[0.08] px-6 text-sm font-bold text-white no-underline backdrop-blur transition hover:bg-white/[0.13] max-[420px]:w-full"
+                to="/dicas"
               >
-                <span className="grid place-items-center w-6 h-6 rounded-full bg-white/20">
-                  <Play className="w-3 h-3 fill-white text-white ml-0.5" />
-                </span>
-                Como funciona
-              </button>
-            </div>
-            {/* Separador */}
-            <div className="relative w-full max-w-[420px]  bg-white/15 mt-2" />
-            {/* Stats rápidos */}
-            <div className="relative grid grid-cols-4 gap-4 max-w-[420px] max-sm:grid-cols-2">
-              {bottomStats.map(({ icon, label, sub }) => (
-                <div key={label} className="flex flex-col items-start gap-1.5">
-                  <span className="text-[#71b549]">{icon}</span>
-                  <span className="text-[12px] font-semibold text-white leading-tight">{label}</span>
-                  <span className="text-[11px] text-white/55">{sub}</span>
-                </div>
-              ))}
+                Ver guia de uso
+                <ArrowUpRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
-          {/* COLUNA DIREITA — Card do mapa */}
-          <div className="relative flex items-center justify-center max-lg:mt-2 max-lg:mb-4">
-            <div className="relative w-full w-[700px] h-[500px] rounded-2xl overflow-hidden border border-white/10 shadow-[0_24px_64px_rgb(0_0_0_/_50%)]">
-              {/* Mapa real da região do usuário */}
-              <Mapa />
-      
-      
-              {/* Barra inferior de métricas
-              <div className="absolute bottom-0 left-0 right-0 bg-[#1a2e10]/90 backdrop-blur-sm border-t border-[#acd494]/15 px-4 py-3 z-[1000]">
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { icon: "", label: "Última atualização", value: "20/05/2024" },
-                    { icon: "", label: "Cobertura de nuvens", value: "12%" },
-                    { icon: "", label: "Próxima atualização", value: "23/05/2024" },
-                  ].map(({ icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-2">
-                      <span className="text-base leading-none">{icon}</span>
-                      <div>
-                        <p className="text-[9px] text-white/45 leading-tight">{label}</p>
-                        <p className="text-[12px] font-semibold text-white leading-tight">{value}</p>
-                      </div>
-                    </div>
-                  ))}
+
+          <div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {heroStats.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  className="flex min-h-[92px] items-center gap-4 rounded-2xl border border-white/12 bg-[#102417]/68 p-4 text-white shadow-[0_18px_42px_rgb(0_0_0_/_18%)] backdrop-blur"
+                  key={item.label}
+                >
+                  <span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-[#acd494]/12 text-[#acd494]">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-black uppercase tracking-widest text-white/45">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 truncate text-base font-black">{item.value}</p>
+                  </div>
                 </div>
-              </div> */}
-            </div>
-      
+              );
+            })}
           </div>
         </div>
-        {/* Gradiente no rodapé */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
-          style={{
-            background: "linear-gradient(to top, rgba(26,46,16,0.85) 0%, transparent 100%)",
-          }}
-          aria-hidden="true"
-          />
-           {/* Card NDVI legenda
-              <div className="absolute top-4 left-4 bg-[#1a2e10]/90 border border-[#acd494]/20 rounded-xl p-3 backdrop-blur-sm min-w-[130px] z-[1000]">
-                <p className="text-[10px] font-bold text-[#acd494] tracking-wider uppercase mb-2">
-                  Índice de Vegetação (NDVI)
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  {ndviLegend.map(({ label, sub, color }) => (
-                    <div key={label} className="flex items-center gap-2">
-                      <span className="flex-none w-3 h-3 rounded-sm" style={{ background: color }} />
-                      <span className="text-[11px] text-white/80 font-medium">{label}</span>
-                      <span className="text-[10px] text-white/45 ml-auto">{sub}</span>
-                    </div>
-                  ))}
-                </div>
-              </div> */}
-      
-      
       </section>
-    <section className="bg-[#ccc1a7]">
 
-    </section>
-    
-    </>
+      <section className="px-4 py-16 sm:px-6 lg:px-10">
+        <div className="mx-auto grid max-w-[1320px] gap-8 xl:grid-cols-[0.92fr_1.08fr] xl:items-center">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#71b549]/25 bg-white px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-[#3b5e26]">
+              <Radar className="h-3.5 w-3.5" />
+              Cockpit da propriedade
+            </span>
+            <h2 className="mt-5 max-w-[620px] font-serif text-[clamp(2.2rem,4vw,4.3rem)] leading-none tracking-normal text-[#16281e]">
+              Um mapa que mostra onde agir primeiro.
+            </h2>
+            <p className="mt-5 max-w-[610px] text-base leading-7 text-[#3d4637]">
+              A tela do PRADO combina mapa, talhões coloridos e cartões de decisão.
+              O produtor escolhe uma camada e entende rapidamente se a área pede água,
+              espera, cuidado com vento ou atenção a risco.
+            </p>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {dashboardFeatures.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <article
+                    className="rounded-2xl border border-[#ded8c3] bg-white p-5 shadow-sm"
+                    key={feature.label}
+                  >
+                    <Icon className="h-7 w-7 text-[#3b5e26]" />
+                    <h3 className="mt-4 text-lg font-black text-[#16281e]">
+                      {feature.label}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-[#3d4637]">{feature.text}</p>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-[22px] border border-[#d9d4bd] bg-[#102417] p-2 shadow-[0_30px_90px_rgb(28_48_28_/_22%)] sm:rounded-[28px] sm:p-3">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-3 text-white">
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-[#acd494]">
+                  PRADO Live
+                </p>
+                <p className="mt-1 text-sm text-white/62">Prévia visual da análise</p>
+              </div>
+              <div className="flex gap-2">
+                {cockpitMetrics.map((metric) => (
+                  <span
+                    className="hidden rounded-full bg-white/[0.08] px-3 py-1 text-xs font-bold text-white/80 sm:inline-flex"
+                    key={metric.label}
+                  >
+                    <span className={`mr-2 mt-1 h-2 w-2 rounded-full ${metric.tone}`} />
+                    {metric.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="relative h-[560px] overflow-hidden rounded-[18px] sm:h-[520px] sm:rounded-[20px]">
+              <Mapa />
+              <div className="absolute bottom-4 left-4 right-4 z-[1000] grid gap-3 sm:grid-cols-4">
+                {cockpitMetrics.map((metric) => (
+                  <div
+                    className="rounded-2xl border border-white/12 bg-[#102417]/90 p-3 text-white shadow-xl backdrop-blur"
+                    key={metric.label}
+                  >
+                    <span className={`block h-1.5 w-10 rounded-full ${metric.tone}`} />
+                    <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-white/45">
+                      {metric.label}
+                    </p>
+                    <p className="mt-1 text-lg font-black">{metric.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#e9ecdc] px-4 py-16 sm:px-6 lg:px-10" id="como-funciona">
+        <div className="mx-auto max-w-[1180px]">
+          <div className="mb-10 max-w-[780px]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#71b549]/25 bg-[#f7f4ea] px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-[#3b5e26]">
+              <Route className="h-3.5 w-3.5" />
+              Da órbita ao manejo
+            </span>
+            <h2 className="mt-5 font-serif text-[clamp(2rem,4vw,3.8rem)] leading-none tracking-normal text-[#16281e]">
+              O PRADO encurta o caminho entre dado técnico e ação no campo.
+            </h2>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            {signalFlow.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <article
+                  className="relative rounded-3xl border border-[#d1c9ae] bg-[#f7f4ea] p-6"
+                  key={step.title}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="grid h-13 min-h-[52px] w-13 min-w-[52px] place-items-center rounded-2xl bg-[#3b5e26] text-white">
+                      <Icon className="h-6 w-6" />
+                    </span>
+                    <span className="font-serif text-5xl font-black leading-none text-[#3b5e26]/16">
+                      {index + 1}
+                    </span>
+                  </div>
+                  <h3 className="mt-6 text-xl font-black text-[#16281e]">{step.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[#3d4637]">{step.text}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 py-16 sm:px-6 lg:px-10" id="indicadores">
+        <div className="mx-auto max-w-[1180px]">
+          <div className="mb-10 grid gap-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#71b549]/25 bg-white px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-[#3b5e26]">
+                <Gauge className="h-3.5 w-3.5" />
+                Decisões de lavoura
+              </span>
+              <h2 className="mt-5 font-serif text-[clamp(2rem,4vw,3.6rem)] leading-none tracking-normal text-[#16281e]">
+                A interface fala a língua da rotina agrícola.
+              </h2>
+            </div>
+            <p className="max-w-[620px] text-base leading-7 text-[#3d4637]">
+              Cada cartão foi pensado para responder uma pergunta objetiva: devo irrigar,
+              posso pulverizar, existe risco, a cultura está sob estresse?
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {decisionCards.map((card) => {
+              const Icon = card.icon;
+              return (
+                <article className="rounded-3xl border border-[#ded8c3] bg-white p-6 shadow-sm" key={card.title}>
+                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#71b549]/12 text-[#3b5e26]">
+                    <Icon className="h-6 w-6" />
+                  </span>
+                  <h3 className="mt-6 text-xl font-black text-[#16281e]">{card.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[#3d4637]">{card.text}</p>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 grid gap-3 rounded-[28px] bg-[#102417] p-4 text-white sm:grid-cols-2 lg:grid-cols-3">
+            {indicators.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div className="flex min-h-[84px] items-center gap-4 rounded-2xl bg-white/[0.06] p-4" key={item.label}>
+                  <Icon className="h-6 w-6 flex-none text-[#acd494]" />
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-widest text-white/42">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 text-base font-black">{item.value}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-16 sm:px-6 lg:px-10">
+        <div className="mx-auto grid max-w-[1180px] gap-8 overflow-hidden rounded-[24px] bg-[#102417] p-5 text-white shadow-[0_30px_90px_rgb(16_36_23_/_22%)] sm:p-8 lg:grid-cols-[1fr_0.85fr] lg:rounded-[32px] lg:p-10">
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#acd494]/25 bg-white/[0.06] px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-[#acd494]">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Por que isso muda o jogo
+            </span>
+            <h2 className="mt-5 max-w-[680px] font-serif text-[clamp(2.2rem,4vw,4rem)] leading-none tracking-normal">
+              Menos ruído. Mais confiança para decidir.
+            </h2>
+            <p className="mt-5 max-w-[620px] text-base leading-7 text-white/74">
+              O PRADO não tenta transformar o produtor em meteorologista. Ele organiza
+              os dados e entrega uma resposta visual, compacta e acionável para a rotina
+              da propriedade.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl border border-white/16 bg-white/[0.06] px-6 text-sm font-bold text-white no-underline transition hover:bg-white/[0.1] max-[420px]:w-full"
+                to="/sobre"
+              >
+                Conhecer o PRADO
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid content-center gap-3">
+            {fieldBenefits.map((benefit) => (
+              <div className="flex items-start gap-3 rounded-2xl bg-white/[0.06] p-4" key={benefit}>
+                <CheckCircle2 className="mt-0.5 h-5 w-5 flex-none text-[#acd494]" />
+                <span className="text-sm font-semibold leading-6 text-white/84">{benefit}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
 

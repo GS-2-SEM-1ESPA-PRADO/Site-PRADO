@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Edge from "../features/edge/Edge";
 import Home from "../features/home/Home";
+import AgroDashboard from "../features/dashboard/AgroDashboard";
+import Dicas from "../features/dicas/Dicas";
 import Sobre from "../features/sobre/Sobre";
 import ErrorPage from "../features/error/Error";
 import MainLayout from "../layouts/MainLayout";
@@ -12,6 +14,8 @@ function AppRoutes() {
       <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="dashboard" element={<AgroDashboard />} />
+          <Route path="dicas" element={<Dicas />} />
           <Route path="sobre" element={<Sobre />} />
           <Route path="edge" element={<Edge />} />
           <Route path="mapa" element={<Mapa />} />

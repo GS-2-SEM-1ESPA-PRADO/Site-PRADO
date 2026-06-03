@@ -1,8 +1,9 @@
 import { MapPin, Play, Satellite, BarChart2, Leaf, Bell } from "lucide-react";
+import fieldLandscape from "../assets/field-landscape.avif";
 
 // Imagem de fundo: foto do campo enviada pelo usuário
 // Substitua o src abaixo pelo caminho real da imagem no projeto
-const FARM_IMAGE = "/assets/farm-hero.jpg";
+const FARM_IMAGE = fieldLandscape;
 
 // Dados do mapa NDVI simulado (gradiente de cor sobre área da lavoura)
 const ndviLegend = [

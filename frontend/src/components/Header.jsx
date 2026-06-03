@@ -1,12 +1,12 @@
-import { Bell } from "lucide-react";
+import { useState } from "react";
+import { Bell, Menu, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const navigationItems = [
   { label: "Inicio", to: "/" },
-  { label: "Dashboard", href: "#dashboard" },
-  { label: "Indicadores", href: "#indicadores" },
+  { label: "Dashboard", to: "/dashboard" },
   { label: "Alertas", href: "#alertas" },
-  { label: "Dicas", href: "#dicas" },
+  { label: "Dicas", to: "/dicas" },
   { label: "Sobre", to: "/sobre" },
 ];
 
@@ -22,16 +22,18 @@ const navInactive =
 const navActive = navBase + " text-white after:opacity-100 after:scale-x-100";
 
 function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navLinkClass = ({ isActive }) => (isActive ? navActive : navInactive);
+  const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-20 w-full text-white bg-primary-dark border-b border-[rgb(172_212_148_/_30%)] shadow-[0_10px_24px_rgb(59_94_38_/_26%)]">
-      <div className="flex items-center gap-7 w-full max-w-[1440px] min-h-[76px] px-10 mx-auto max-[980px]:flex-wrap max-[980px]:gap-x-5 max-[980px]:gap-y-3 max-[980px]:px-6 max-[980px]:py-3 max-sm:px-4">
-
+    <header className="sticky top-0 z-50 w-full border-b border-[rgb(172_212_148_/_30%)] bg-primary-dark text-white shadow-[0_10px_24px_rgb(59_94_38_/_26%)]">
+      <div className="mx-auto flex min-h-[76px] w-full max-w-[1440px] flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6 lg:flex-nowrap lg:gap-7 lg:px-10 lg:py-0">
         <NavLink
-          className="inline-flex items-center min-w-[260px] gap-3 text-inherit no-underline max-[980px]:min-w-0"
+          className="inline-flex min-w-0 flex-1 items-center gap-3 text-inherit no-underline lg:min-w-[260px] lg:flex-none"
           to="/"
           aria-label="PRADO inicio"
+          onClick={closeMenu}
         >
           <span
             className="relative inline-block flex-none w-[30px] h-[26px] bg-primary rounded-[70%_0_70%_45%] shadow-[inset_-6px_-4px_0_rgb(59_94_38_/_18%)] rotate-[-34deg] after:content-[''] after:absolute after:right-[7px] after:bottom-[3px] after:w-[2px] after:h-[23px] after:bg-[rgb(59_94_38_/_60%)] after:rounded-full after:rotate-[38deg] after:origin-bottom"
@@ -41,37 +43,47 @@ function Header() {
             <strong className="text-[27px] font-extrabold tracking-normal max-sm:text-[23px]">
               PRADO
             </strong>
-            <span className="text-[10px] font-semibold text-white/80 whitespace-nowrap max-sm:hidden">
+            <span className="hidden whitespace-nowrap text-[10px] font-semibold text-white/80 sm:inline">
               Tecnologia que cultiva melhores resultados
             </span>
           </span>
         </NavLink>
 
         <nav
-          className="flex flex-1 justify-center gap-8 max-[980px]:order-3 max-[980px]:justify-start max-[980px]:w-full max-[980px]:gap-5 max-[980px]:pb-0.5 max-[980px]:overflow-x-auto"
+          className={`order-3 w-full gap-1 rounded-2xl border border-white/10 bg-white/[0.06] p-2 shadow-inner lg:order-none lg:flex lg:flex-1 lg:justify-center lg:gap-8 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none ${
+            isMenuOpen ? "grid" : "hidden"
+          }`}
           aria-label="Navegacao principal"
         >
           {navigationItems.map((item) =>
             item.to ? (
               <NavLink
                 key={item.label}
-                className={navLinkClass}
+                className={(state) =>
+                  `${navLinkClass(state)} w-full justify-start rounded-xl px-3 lg:w-auto lg:justify-center lg:rounded-none lg:px-0`
+                }
                 to={item.to}
                 end={item.to === "/"}
+                onClick={closeMenu}
               >
                 {item.label}
               </NavLink>
             ) : (
-              <a key={item.label} className={navInactive} href={item.href}>
+              <a
+                key={item.label}
+                className={`${navInactive} w-full justify-start rounded-xl px-3 lg:w-auto lg:justify-center lg:rounded-none lg:px-0`}
+                href={item.href}
+                onClick={closeMenu}
+              >
                 {item.label}
               </a>
             ),
           )}
         </nav>
 
-        <div className="flex items-center justify-end min-w-[324px] gap-4 max-[980px]:flex-1 max-[980px]:min-w-0 max-sm:gap-2.5">
+        <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3 lg:min-w-[324px] lg:gap-4">
           <button
-            className="inline-flex items-center gap-2 h-10 px-3.5 text-xs font-bold text-white/90 bg-[rgb(59_94_38_/_70%)] border border-[rgb(172_212_148_/_25%)] rounded-lg transition-all duration-200 hover:text-white hover:bg-primary hover:border-[rgb(172_212_148_/_50%)] max-sm:hidden"
+            className="hidden h-10 items-center gap-2 rounded-lg border border-[rgb(172_212_148_/_25%)] bg-[rgb(59_94_38_/_70%)] px-3.5 text-xs font-bold text-white/90 transition-all duration-200 hover:border-[rgb(172_212_148_/_50%)] hover:bg-primary hover:text-white xl:inline-flex"
             type="button"
           >
             <span
@@ -86,7 +98,7 @@ function Header() {
           </button>
 
           <button
-            className="grid place-items-center w-10 h-10 bg-transparent border border-transparent rounded-full transition-all duration-200 hover:bg-[rgb(113_181_73_/_20%)]"
+            className="grid h-10 w-10 place-items-center rounded-full border border-transparent bg-transparent transition-all duration-200 hover:bg-[rgb(113_181_73_/_20%)]"
             type="button"
             aria-label="Alertas"
           >
@@ -94,10 +106,24 @@ function Header() {
           </button>
 
           <button
-            className="h-10 px-6 text-xs font-bold text-white/90 bg-[rgb(59_94_38_/_70%)] border border-[rgb(172_212_148_/_25%)] rounded-lg transition-all duration-200 hover:text-white hover:bg-primary hover:border-[rgb(172_212_148_/_50%)] max-sm:px-4"
+            className="hidden h-10 rounded-lg border border-[rgb(172_212_148_/_25%)] bg-[rgb(59_94_38_/_70%)] px-5 text-xs font-bold text-white/90 transition-all duration-200 hover:border-[rgb(172_212_148_/_50%)] hover:bg-primary hover:text-white sm:inline-block"
             type="button"
           >
             Entrar
+          </button>
+
+          <button
+            className="grid h-10 w-10 place-items-center rounded-xl border border-[rgb(172_212_148_/_24%)] bg-white/[0.06] text-primary-light transition hover:bg-white/[0.1] lg:hidden"
+            type="button"
+            aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={isMenuOpen}
+            onClick={() => setIsMenuOpen((open) => !open)}
+          >
+            {isMenuOpen ? (
+              <X className="h-5 w-5" aria-hidden="true" />
+            ) : (
+              <Menu className="h-5 w-5" aria-hidden="true" />
+            )}
           </button>
         </div>
       </div>
