@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 
 import "leaflet/dist/leaflet.css";
+import { buscarClimaAtual, urlTileMapa } from "../lib/api.js";
 
 // corrige ícone quebrado do leaflet no react
 delete L.Icon.Default.prototype._getIconUrl;
@@ -22,10 +23,8 @@ export default function Mapa() {
   const [position, setPosition] = useState(null);
   const [weather, setWeather] = useState(null);
 
-  // SUA CHAVE OPENWEATHER
-  const API_KEY = "6943afc37743b85438ca0d9959fdb141";
-
   useEffect(() => {
+    // A localização aproximada vem do IP do visitante (sem chave de API).
     fetch("https://ipapi.co/json/")
       .then((res) => res.json())
       .then(async (data) => {
@@ -34,14 +33,15 @@ export default function Mapa() {
 
         setPosition([lat, lon]);
 
-        // clima atual
-        const weatherRes = await fetch(
-          `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&lang=pt_br&appid=${API_KEY}`
-        );
-
-        const weatherData = await weatherRes.json();
-
-        setWeather(weatherData);
+        // O clima atual agora vem do nosso backend, que conversa com a
+        // OpenWeatherMap por baixo dos panos (a chave fica no servidor).
+        try {
+          const climaAtual = await buscarClimaAtual(lat, lon);
+          setWeather(climaAtual);
+        } catch {
+          // Sem clima: o mapa continua funcionando, apenas sem o card.
+          setWeather(null);
+        }
       })
       .catch(() => {
         setPosition(FALLBACK);
@@ -70,18 +70,18 @@ export default function Mapa() {
 
           <div className="flex items-center gap-3">
             <img
-              src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
+              src={`https://openweathermap.org/img/wn/${weather.icone}@2x.png`}
               alt=""
               className="h-12 w-12 sm:h-14 sm:w-14"
             />
 
             <div>
               <p className="text-2xl font-bold leading-none sm:text-3xl">
-                {Math.round(weather.main.temp)}°
+                {weather.temperatura}°
               </p>
 
               <p className="text-sm text-white/70 capitalize">
-                {weather.weather[0].description}
+                {weather.descricao}
               </p>
             </div>
           </div>
@@ -90,14 +90,14 @@ export default function Mapa() {
             <div>
               <p className="text-white/40">Umidade</p>
               <p className="font-semibold">
-                {weather.main.humidity}%
+                {weather.umidade}%
               </p>
             </div>
 
             <div>
               <p className="text-white/40">Vento</p>
               <p className="font-semibold">
-                {Math.round(weather.wind.speed)} km/h
+                {weather.vento} km/h
               </p>
             </div>
           </div>
@@ -115,16 +115,16 @@ export default function Mapa() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* CAMADA DE CHUVA */}
+        {/* CAMADA DE CHUVA (servida pelo backend) */}
         <TileLayer
           opacity={0.5}
-          url={`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${API_KEY}`}
+          url={urlTileMapa("chuva")}
         />
 
-        {/* CAMADA DE NUVENS */}
+        {/* CAMADA DE NUVENS (servida pelo backend) */}
         <TileLayer
           opacity={0.3}
-          url={`https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${API_KEY}`}
+          url={urlTileMapa("nuvens")}
         />
 
         <Marker position={position}>

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, Menu, X } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { encerrarSessao, obterUsuario } from "../lib/api.js";
 
 const navigationItems = [
   { label: "Inicio", to: "/" },
@@ -25,6 +26,35 @@ function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navLinkClass = ({ isActive }) => (isActive ? navActive : navInactive);
   const closeMenu = () => setIsMenuOpen(false);
+
+  const navigate = useNavigate();
+
+  // Mantém o cabeçalho sabendo quem está logado. O api.js dispara o evento
+  // "prado-sessao" sempre que alguém entra ou sai, então o botão se atualiza
+  // sozinho, sem recarregar a página.
+  const [usuario, setUsuario] = useState(obterUsuario());
+
+  useEffect(() => {
+    function atualizar() {
+      setUsuario(obterUsuario());
+    }
+    window.addEventListener("prado-sessao", atualizar);
+    return () => window.removeEventListener("prado-sessao", atualizar);
+  }, []);
+
+  // Clique no botão de acesso: se já estiver logado, sai e volta ao início;
+  // se não, abre a página de login.
+  function aoClicarAcesso() {
+    if (usuario) {
+      encerrarSessao();
+      navigate("/");
+    } else {
+      navigate("/login");
+    }
+  }
+
+  // Mostra apenas o primeiro nome no botão quando logado.
+  const primeiroNome = usuario ? usuario.nome.split(" ")[0] : "";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[rgb(172_212_148_/_30%)] bg-primary-dark text-white shadow-[0_10px_24px_rgb(59_94_38_/_26%)]">
@@ -108,8 +138,10 @@ function Header() {
           <button
             className="hidden h-10 rounded-lg border border-[rgb(172_212_148_/_25%)] bg-[rgb(59_94_38_/_70%)] px-5 text-xs font-bold text-white/90 transition-all duration-200 hover:border-[rgb(172_212_148_/_50%)] hover:bg-primary hover:text-white sm:inline-block"
             type="button"
+            onClick={aoClicarAcesso}
+            title={usuario ? "Sair da conta" : "Entrar"}
           >
-            Entrar
+            {usuario ? primeiroNome : "Entrar"}
           </button>
 
           <button

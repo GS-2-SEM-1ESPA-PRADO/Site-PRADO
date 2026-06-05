@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -39,6 +39,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { buscarClima } from "../../lib/api.js";
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -47,8 +48,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
-
-const OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast";
 
 const baseLayers = [
   {
@@ -102,6 +101,36 @@ const regions = [
   },
 ];
 
+const brazilStateCodes = {
+  ACRE: "AC",
+  ALAGOAS: "AL",
+  AMAPA: "AP",
+  AMAZONAS: "AM",
+  BAHIA: "BA",
+  CEARA: "CE",
+  "DISTRITO FEDERAL": "DF",
+  "ESPIRITO SANTO": "ES",
+  GOIAS: "GO",
+  MARANHAO: "MA",
+  "MATO GROSSO": "MT",
+  "MATO GROSSO DO SUL": "MS",
+  "MINAS GERAIS": "MG",
+  PARA: "PA",
+  PARAIBA: "PB",
+  PARANA: "PR",
+  PERNAMBUCO: "PE",
+  PIAUI: "PI",
+  "RIO DE JANEIRO": "RJ",
+  "RIO GRANDE DO NORTE": "RN",
+  "RIO GRANDE DO SUL": "RS",
+  RONDONIA: "RO",
+  RORAIMA: "RR",
+  "SANTA CATARINA": "SC",
+  "SAO PAULO": "SP",
+  SERGIPE: "SE",
+  TOCANTINS: "TO",
+};
+
 const fallbackReadings = {
   source: "Demonstração local",
   updatedAt: "Sem conexão com a API",
@@ -136,23 +165,6 @@ function clamp(value, min = 0, max = 1) {
   return Math.min(Math.max(value, min), max);
 }
 
-function average(values = []) {
-  const valid = values.filter((value) => Number.isFinite(value));
-  if (!valid.length) return 0;
-  return valid.reduce((sumValue, value) => sumValue + value, 0) / valid.length;
-}
-
-function max(values = []) {
-  const valid = values.filter((value) => Number.isFinite(value));
-  return valid.length ? Math.max(...valid) : 0;
-}
-
-function sum(values = []) {
-  return values
-    .filter((value) => Number.isFinite(value))
-    .reduce((total, value) => total + value, 0);
-}
-
 function formatNumber(value, digits = 0) {
   if (!Number.isFinite(value)) return "--";
   return new Intl.NumberFormat("pt-BR", {
@@ -161,47 +173,29 @@ function formatNumber(value, digits = 0) {
   }).format(value);
 }
 
-function growingDegreeDays(temperatures = [], baseTemperature = 10) {
-  const valid = temperatures.filter((value) => Number.isFinite(value));
-  if (!valid.length) return 0;
-
-  return (
-    valid.reduce((total, temperature) => {
-      return total + Math.max(temperature - baseTemperature, 0);
-    }, 0) / 24
-  );
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .trim();
 }
 
-function buildReadings(payload) {
-  const hourly = payload.hourly || {};
-  const temperatures = hourly.temperature_2m || [];
+function stateCodeFromAddress(address = {}) {
+  const isoCode = address["ISO3166-2-lvl4"] || address["ISO3166-2-lvl3"];
+  if (isoCode && isoCode.includes("-")) {
+    return isoCode.split("-").pop();
+  }
 
-  return {
-    source: "Open-Meteo",
-    updatedAt: new Date().toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    temperature: average(temperatures),
-    humidity: average(hourly.relative_humidity_2m),
-    precipitation: sum(hourly.precipitation),
-    rainProbability: max(hourly.precipitation_probability),
-    wind: average(hourly.wind_speed_10m),
-    gust: max(hourly.wind_gusts_10m),
-    apparentTemperature: average(hourly.apparent_temperature),
-    dewPoint: average(hourly.dew_point_2m),
-    cloudCover: average(hourly.cloud_cover),
-    pressure: average(hourly.surface_pressure),
-    soilMoisture: average(hourly.soil_moisture_0_to_1cm),
-    soilMoisture1to3: average(hourly.soil_moisture_1_to_3cm),
-    soilMoisture3to9: average(hourly.soil_moisture_3_to_9cm),
-    soilTemperature: average(hourly.soil_temperature_0cm),
-    soilTemperature6: average(hourly.soil_temperature_6cm),
-    evapotranspiration: sum(hourly.evapotranspiration),
-    vapourPressureDeficit: average(hourly.vapour_pressure_deficit),
-    radiation: average(hourly.direct_radiation),
-    growingDegreeDays: growingDegreeDays(temperatures),
-  };
+  const state = address.state || address.region;
+  if (!state) return "BR";
+
+  if (state.length === 2) return state.toUpperCase();
+  return brazilStateCodes[normalizeText(state)] || state;
+}
+
+function areaLabel(area) {
+  return [area.name, area.state].filter(Boolean).join(", ");
 }
 
 function metricIntensity(kind, readings) {
@@ -586,6 +580,7 @@ function MapClickHandler({ onPickPoint }) {
 }
 
 function AgroDashboard() {
+  const placeLookupId = useRef(0);
   const [selectedArea, setSelectedArea] = useState(regions[0]);
   const [readings, setReadings] = useState(fallbackReadings);
   const [activeMetricId, setActiveMetricId] = useState("irrigation");
@@ -617,46 +612,47 @@ function AgroDashboard() {
   );
 
   useEffect(() => {
-    const controller = new AbortController();
+    if (selectedArea.isResolving) {
+      return undefined;
+    }
+
+    // Flag para evitar atualizar o estado caso o componente seja
+    // desmontado ou a área mude antes da resposta chegar.
+    let ativo = true;
 
     async function loadForecast() {
       setIsLoading(true);
-      setApiStatus("Consultando Open-Meteo");
+      setApiStatus("Consultando dados");
 
-      const params = new URLSearchParams({
-        latitude: String(selectedArea.lat),
-        longitude: String(selectedArea.lon),
-        hourly:
-          "temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,cloud_cover,surface_pressure,wind_speed_10m,wind_gusts_10m,direct_radiation,evapotranspiration,vapour_pressure_deficit,soil_temperature_0cm,soil_temperature_6cm,soil_moisture_0_to_1cm,soil_moisture_1_to_3cm,soil_moisture_3_to_9cm",
-        forecast_hours: "24",
-        timezone: "auto",
-      });
+      const local = areaLabel(selectedArea);
 
       try {
-        const response = await fetch(`${OPEN_METEO_URL}?${params.toString()}`, {
-          signal: controller.signal,
-        });
+        // O backend faz a consulta à Open-Meteo, processa os dados e,
+        // se houver usuário logado, salva no histórico automaticamente.
+        const resposta = await buscarClima(selectedArea.lat, selectedArea.lon, local);
 
-        if (!response.ok) {
-          throw new Error("Não foi possível consultar a API.");
-        }
+        if (!ativo) return;
 
-        const payload = await response.json();
-        setReadings(buildReadings(payload));
-        setApiStatus("API conectada");
-      } catch (error) {
-        if (error.name !== "AbortError") {
+        setReadings(resposta.leitura);
+        setApiStatus(
+          resposta.origem === "online" ? "API conectada" : "Dados demonstrativos",
+        );
+      } catch {
+        // Se nem o backend respondeu, usa a leitura local de demonstração.
+        if (ativo) {
           setReadings(fallbackReadings);
-          setApiStatus("Dados demonstrativos");
+          setApiStatus("Backend indisponível");
         }
       } finally {
-        setIsLoading(false);
+        if (ativo) setIsLoading(false);
       }
     }
 
     loadForecast();
 
-    return () => controller.abort();
+    return () => {
+      ativo = false;
+    };
   }, [refreshKey, selectedArea]);
 
   function selectRegion(region) {
@@ -664,16 +660,68 @@ function AgroDashboard() {
     setSelectedArea(region);
   }
 
-  function pickMapPoint(latlng) {
-    setSelectedCell(null);
+ async function pickMapPoint(latlng) {
+  setSelectedCell(null);
+  setIsLoading(false);
+  setApiStatus("Identificando localização");
+  const lookupId = placeLookupId.current + 1;
+  placeLookupId.current = lookupId;
+
+  // Já define um nome provisório enquanto a API responde,
+  // para o mapa não ficar parado esperando.
+  setSelectedArea({
+    name: "Carregando...",
+    state: "",
+    crop: "Identificando localização",
+    lat: latlng.lat,
+    lon: latlng.lng,
+    isResolving: true,
+  });
+
+  try {
+    const resposta = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json&accept-language=pt-BR`,
+      { headers: { "Accept-Language": "pt-BR" } }
+    );
+    if (!resposta.ok) {
+      throw new Error("Falha ao identificar o local.");
+    }
+
+    const dados = await resposta.json();
+    if (lookupId !== placeLookupId.current) return;
+
+    const cidade =
+      dados.address?.city ||
+      dados.address?.town ||
+      dados.address?.village ||
+      dados.address?.municipality ||
+      dados.address?.city_district ||
+      dados.address?.suburb ||
+      dados.address?.county ||
+      "Área rural";
+
+    const estadoAbrev = stateCodeFromAddress(dados.address);
+
     setSelectedArea({
-      name: "Ponto selecionado",
-      state: "Mapa",
-      crop: "Análise personalizada",
+      name: cidade,
+      state: estadoAbrev,
+      crop: dados.address?.county || "Ponto selecionado no mapa",
+      lat: latlng.lat,
+      lon: latlng.lng,
+    });
+  } catch {
+    if (lookupId !== placeLookupId.current) return;
+
+    // Se a API falhar, usa um nome descritivo com as coordenadas.
+    setSelectedArea({
+      name: `${latlng.lat.toFixed(2)}°S`,
+      state: `${Math.abs(latlng.lng).toFixed(2)}°O`,
+      crop: "Ponto selecionado no mapa",
       lat: latlng.lat,
       lon: latlng.lng,
     });
   }
+}
 
   function locateUser() {
     if (!navigator.geolocation) {
