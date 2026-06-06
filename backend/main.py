@@ -39,16 +39,16 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 # Chave da OpenWeatherMap. Fica no servidor, fora do código do front-end.
 # Defina OPENWEATHER_API_KEY no arquivo .env local.
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "")
+OPENWEATHER_API_KEY: str = os.getenv("OPENWEATHER_API_KEY", "")
 
 # URLs das APIs externas usadas pelo backend.
-URL_OPEN_METEO = "https://api.open-meteo.com/v1/forecast"
-URL_OPENWEATHER_ATUAL = "https://api.openweathermap.org/data/2.5/weather"
-URL_OPENWEATHER_TILE = "https://tile.openweathermap.org/map"
+URL_OPEN_METEO: str = "https://api.open-meteo.com/v1/forecast"
+URL_OPENWEATHER_ATUAL: str = "https://api.openweathermap.org/data/2.5/weather"
+URL_OPENWEATHER_TILE: str = "https://tile.openweathermap.org/map"
 
 # Camadas de mapa que o front-end pode pedir, traduzidas para os nomes
 # que a OpenWeatherMap entende.
-CAMADAS_MAPA = {
+CAMADAS_MAPA: dict[str, str] = {
     "chuva": "precipitation_new",
     "nuvens": "clouds_new",
 }
@@ -56,7 +56,7 @@ CAMADAS_MAPA = {
 # Garante que as pastas e o arquivo de usuários existam ao iniciar.
 storage.garantir_estrutura()
 
-app = FastAPI(title="PRADO API", version="1.0.0")
+app: FastAPI = FastAPI(title="PRADO API", version="1.0.0")
 
 # Libera o acesso a partir do front-end rodando em outra porta (Vite).
 # Em um projeto acadêmico, liberar todas as origens simplifica o uso.
@@ -90,7 +90,7 @@ class DadosLogin(BaseModel):
 # ---------------------------------------------------------------------------
 # Função auxiliar de autenticação
 # ---------------------------------------------------------------------------
-def usuario_do_token(token):
+def usuario_do_token(token: str) -> dict | None:
     """Devolve o usuário dono de um token, ou ``None`` se o token for inválido.
 
     Diferente de uma exceção, aqui retornamos ``None`` para que os
@@ -100,12 +100,12 @@ def usuario_do_token(token):
     return storage.buscar_usuario_por_token(token)
 
 
-def exigir_usuario(token):
+def exigir_usuario(token: str) -> dict:
     """Versão que obriga login: levanta erro 401 se o token for inválido.
 
     Usada nos endpoints de dados pessoais (histórico, favoritos, alertas).
     """
-    usuario = usuario_do_token(token)
+    usuario: dict | None = usuario_do_token(token)
     if usuario is None:
         raise HTTPException(status_code=401, detail="Sessão inválida ou expirada.")
     return usuario
@@ -115,7 +115,7 @@ def exigir_usuario(token):
 # Rotas básicas
 # ---------------------------------------------------------------------------
 @app.get("/")
-def raiz():
+def raiz() -> dict:
     """Endpoint simples para confirmar que a API está no ar."""
     return {
         "aplicacao": "PRADO API",
@@ -128,16 +128,16 @@ def raiz():
 # Autenticação
 # ---------------------------------------------------------------------------
 @app.post("/api/cadastro")
-def cadastrar(dados: DadosCadastro):
+def cadastrar(dados: DadosCadastro) -> dict:
     """Cadastra um novo usuário.
 
     Valida os campos, verifica se o e-mail já existe e cria o arquivo de
     dados individual. Retorna o token de sessão para já deixar o usuário
     logado.
     """
-    nome = dados.nome.strip()
-    email = dados.email.strip().lower()
-    senha = dados.senha
+    nome: str = dados.nome.strip()
+    email: str = dados.email.strip().lower()
+    senha: str = dados.senha
 
     # Validações simples de preenchimento.
     if not nome or not email or not senha:
@@ -155,8 +155,8 @@ def cadastrar(dados: DadosCadastro):
     if storage.buscar_usuario_por_email(email) is not None:
         raise HTTPException(status_code=409, detail="Este e-mail já está cadastrado.")
 
-    token = uuid.uuid4().hex
-    usuario = storage.adicionar_usuario(nome, email, senha, token)
+    token: str = uuid.uuid4().hex
+    usuario: dict = storage.adicionar_usuario(nome, email, senha, token)
 
     return {
         "token": usuario["token"],
@@ -166,17 +166,17 @@ def cadastrar(dados: DadosCadastro):
 
 
 @app.post("/api/login")
-def login(dados: DadosLogin):
+def login(dados: DadosLogin) -> dict:
     """Autentica um usuário existente e renova o token de sessão."""
-    email = dados.email.strip().lower()
-    senha = dados.senha
+    email: str = dados.email.strip().lower()
+    senha: str = dados.senha
 
-    usuario = storage.buscar_usuario_por_email(email)
+    usuario: dict | None = storage.buscar_usuario_por_email(email)
     if usuario is None or usuario.get("senha") != senha:
         raise HTTPException(status_code=401, detail="E-mail ou senha incorretos.")
 
     # Gera um novo token a cada login.
-    token = uuid.uuid4().hex
+    token: str = uuid.uuid4().hex
     storage.atualizar_token(email, token)
 
     return {
@@ -195,7 +195,7 @@ def consultar_clima(
     lon: float = Query(..., description="Longitude da área"),
     local: str = Query("Área selecionada", description="Nome amigável do local"),
     token: str = Query("", description="Token de sessão (opcional)"),
-):
+) -> dict:
     """Consulta a previsão para uma coordenada e devolve a leitura processada.
 
     Fluxo completo:
@@ -208,7 +208,7 @@ def consultar_clima(
     Em caso de falha na API externa, devolve uma leitura de demonstração,
     para que a interface nunca fique quebrada.
     """
-    parametros = {
+    parametros: dict = {
         "latitude": lat,
         "longitude": lon,
         "hourly": ",".join(climate.PARAMETROS_HORARIOS),
@@ -217,24 +217,24 @@ def consultar_clima(
     }
 
     try:
-        resposta = requests.get(URL_OPEN_METEO, params=parametros, timeout=12)
+        resposta: requests.Response = requests.get(URL_OPEN_METEO, params=parametros, timeout=12)
         resposta.raise_for_status()
-        payload = resposta.json()
-        leitura = climate.construir_leitura(payload)
-        origem = "online"
+        payload: dict = resposta.json()
+        leitura: dict = climate.construir_leitura(payload)
+        origem: str = "online"
     except (requests.RequestException, ValueError):
         # Sem internet ou resposta inválida: usa dados de demonstração.
         leitura = dict(climate.LEITURA_DEMONSTRACAO)
         origem = "demonstracao"
 
     # Calcula os níveis de atenção e os alertas a partir da leitura.
-    indicadores = climate.calcular_indicadores(leitura)
-    alertas = climate.gerar_alertas(indicadores)
+    indicadores: dict = climate.calcular_indicadores(leitura)
+    alertas: list[dict] = climate.gerar_alertas(indicadores)
 
     # Se o usuário estiver logado, persiste os dados dele.
-    usuario = usuario_do_token(token)
+    usuario: dict | None = usuario_do_token(token)
     if usuario is not None:
-        email = usuario["email"]
+        email: str = usuario["email"]
         storage.registrar_consulta(email, local, lat, lon, leitura)
         storage.registrar_favorito_automatico(email, local, lat, lon)
         storage.registrar_alertas(email, local, alertas, lat, lon)
@@ -251,7 +251,7 @@ def consultar_clima(
 def clima_atual(
     lat: float = Query(..., description="Latitude"),
     lon: float = Query(..., description="Longitude"),
-):
+) -> dict:
     """Devolve o clima atual de um ponto (proxy da OpenWeatherMap).
 
     Retorna um objeto simplificado e já em português, escondendo a chave
@@ -262,7 +262,7 @@ def clima_atual(
             status_code=500, detail="OPENWEATHER_API_KEY nao configurada no backend."
         )
 
-    parametros = {
+    parametros: dict = {
         "lat": lat,
         "lon": lon,
         "units": "metric",
@@ -271,18 +271,18 @@ def clima_atual(
     }
 
     try:
-        resposta = requests.get(URL_OPENWEATHER_ATUAL, params=parametros, timeout=12)
+        resposta: requests.Response = requests.get(URL_OPENWEATHER_ATUAL, params=parametros, timeout=12)
         resposta.raise_for_status()
-        dados = resposta.json()
+        dados: dict = resposta.json()
 
-        clima = dados.get("weather", [{}])[0]
-        principal = dados.get("main", {})
-        vento = dados.get("wind", {})
+        clima_item: dict = dados.get("weather", [{}])[0]
+        principal: dict = dados.get("main", {})
+        vento: dict = dados.get("wind", {})
 
         return {
             "temperatura": round(principal.get("temp", 0)),
-            "descricao": clima.get("description", ""),
-            "icone": clima.get("icon", "01d"),
+            "descricao": clima_item.get("description", ""),
+            "icone": clima_item.get("icon", "01d"),
             "umidade": principal.get("humidity", 0),
             "vento": round(vento.get("speed", 0)),
         }
@@ -293,24 +293,24 @@ def clima_atual(
 
 
 @app.get("/api/mapa/{camada}/{z}/{x}/{y}.png")
-def proxy_tile(camada: str, z: int, x: int, y: int):
+def proxy_tile(camada: str, z: int, x: int, y: int) -> Response:
     """Repassa as imagens (tiles) das camadas de clima do mapa.
 
     O navegador pede cada quadradinho do mapa a este endpoint, que busca a
     imagem na OpenWeatherMap usando a chave guardada no servidor. Assim a
     chave nunca aparece no código do front-end.
     """
-    nome_camada = CAMADAS_MAPA.get(camada)
+    nome_camada: str | None = CAMADAS_MAPA.get(camada)
     if nome_camada is None:
         raise HTTPException(status_code=404, detail="Camada de mapa desconhecida.")
     if not OPENWEATHER_API_KEY:
         return Response(status_code=204)
 
-    url = f"{URL_OPENWEATHER_TILE}/{nome_camada}/{z}/{x}/{y}.png"
-    parametros = {"appid": OPENWEATHER_API_KEY}
+    url: str = f"{URL_OPENWEATHER_TILE}/{nome_camada}/{z}/{x}/{y}.png"
+    parametros: dict = {"appid": OPENWEATHER_API_KEY}
 
     try:
-        resposta = requests.get(url, params=parametros, timeout=12)
+        resposta: requests.Response = requests.get(url, params=parametros, timeout=12)
         resposta.raise_for_status()
         return Response(content=resposta.content, media_type="image/png")
     except requests.RequestException:
@@ -322,18 +322,18 @@ def proxy_tile(camada: str, z: int, x: int, y: int):
 # Dados pessoais: histórico, favoritos e alertas
 # ---------------------------------------------------------------------------
 @app.get("/api/historico")
-def listar_historico(token: str = Query(..., description="Token de sessão")):
+def listar_historico(token: str = Query(..., description="Token de sessão")) -> dict:
     """Lista o histórico de consultas do usuário logado."""
-    usuario = exigir_usuario(token)
-    dados = storage.carregar_dados_usuario(usuario["email"])
+    usuario: dict = exigir_usuario(token)
+    dados: dict = storage.carregar_dados_usuario(usuario["email"])
     return {"historico": dados["historico"]}
 
 
 @app.get("/api/favoritos")
-def listar_favoritos(token: str = Query(..., description="Token de sessão")):
+def listar_favoritos(token: str = Query(..., description="Token de sessão")) -> dict:
     """Lista os locais favoritos (áreas já analisadas) do usuário."""
-    usuario = exigir_usuario(token)
-    dados = storage.carregar_dados_usuario(usuario["email"])
+    usuario: dict = exigir_usuario(token)
+    dados: dict = storage.carregar_dados_usuario(usuario["email"])
     return {"favoritos": dados["favoritos"]}
 
 
@@ -341,18 +341,18 @@ def listar_favoritos(token: str = Query(..., description="Token de sessão")):
 def excluir_favorito(
     favorito_id: int,
     token: str = Query(..., description="Token de sessão"),
-):
+) -> dict:
     """Remove um local favorito do usuário pelo seu id."""
-    usuario = exigir_usuario(token)
-    removeu = storage.remover_favorito(usuario["email"], favorito_id)
+    usuario: dict = exigir_usuario(token)
+    removeu: bool = storage.remover_favorito(usuario["email"], favorito_id)
     if not removeu:
         raise HTTPException(status_code=404, detail="Favorito não encontrado.")
     return {"removido": True, "id": favorito_id}
 
 
 @app.get("/api/alertas")
-def listar_alertas(token: str = Query(..., description="Token de sessão")):
+def listar_alertas(token: str = Query(..., description="Token de sessão")) -> dict:
     """Lista os alertas gerados para o usuário logado."""
-    usuario = exigir_usuario(token)
-    dados = storage.carregar_dados_usuario(usuario["email"])
+    usuario: dict = exigir_usuario(token)
+    dados: dict = storage.carregar_dados_usuario(usuario["email"])
     return {"alertas": dados["alertas"]}
