@@ -31,7 +31,7 @@ from datetime import datetime
 # Parâmetros horários que pedimos para a Open-Meteo. Mantê-los em uma
 # tupla deixa claro que essa lista é fixa e não deve ser alterada em
 # tempo de execução.
-PARAMETROS_HORARIOS = (
+PARAMETROS_HORARIOS: tuple[str, ...] = (
     "temperature_2m",
     "relative_humidity_2m",
     "dew_point_2m",
@@ -56,50 +56,50 @@ PARAMETROS_HORARIOS = (
 # ---------------------------------------------------------------------------
 # Funções auxiliares de cálculo (operam sobre listas de números)
 # ---------------------------------------------------------------------------
-def _numeros_validos(valores):
+def _numeros_validos(valores: list | None) -> list[float]:
     """Filtra uma lista mantendo apenas números reais (descarta None/NaN).
 
     A API às vezes devolve ``null`` em algumas posições. Esta função
     percorre a lista e devolve uma nova lista só com valores numéricos
     utilizáveis.
     """
-    validos = []
+    validos: list[float] = []
     for valor in valores or []:
         if isinstance(valor, (int, float)) and not _e_nan(valor):
             validos.append(valor)
     return validos
 
 
-def _e_nan(valor):
+def _e_nan(valor: float) -> bool:
     """Detecta NaN (Not a Number) sem depender de bibliotecas externas."""
     return valor != valor  # NaN é o único valor diferente de si mesmo.
 
 
-def media(valores):
+def media(valores: list | None) -> float:
     """Calcula a média aritmética dos valores válidos. Retorna 0 se vazio."""
-    validos = _numeros_validos(valores)
+    validos: list[float] = _numeros_validos(valores)
     if not validos:
         return 0
     return sum(validos) / len(validos)
 
 
-def soma(valores):
+def soma(valores: list | None) -> float:
     """Soma todos os valores válidos de uma lista."""
     return sum(_numeros_validos(valores))
 
 
-def maximo(valores):
+def maximo(valores: list | None) -> float:
     """Devolve o maior valor válido de uma lista. Retorna 0 se vazio."""
-    validos = _numeros_validos(valores)
+    validos: list[float] = _numeros_validos(valores)
     return max(validos) if validos else 0
 
 
-def limitar(valor, minimo=0.0, maximo_valor=1.0):
+def limitar(valor: float, minimo: float = 0.0, maximo_valor: float = 1.0) -> float:
     """Garante que um número fique dentro de um intervalo [min, max]."""
     return min(max(valor, minimo), maximo_valor)
 
 
-def graus_dia(temperaturas, base=10):
+def graus_dia(temperaturas: list | None, base: float = 10) -> float:
     """Calcula os graus-dia de desenvolvimento (GDD) para 24 horas.
 
     Para cada temperatura horária, acumula o quanto ela passou da
@@ -107,10 +107,10 @@ def graus_dia(temperaturas, base=10):
     obter a média diária. É um indicador clássico do ritmo de
     crescimento das culturas.
     """
-    validos = _numeros_validos(temperaturas)
+    validos: list[float] = _numeros_validos(temperaturas)
     if not validos:
         return 0
-    acumulado = 0
+    acumulado: float = 0
     for temperatura in validos:
         acumulado += max(temperatura - base, 0)
     return acumulado / 24
@@ -119,7 +119,7 @@ def graus_dia(temperaturas, base=10):
 # ---------------------------------------------------------------------------
 # Construção da leitura resumida
 # ---------------------------------------------------------------------------
-def construir_leitura(payload):
+def construir_leitura(payload: dict) -> dict:
     """Transforma a resposta bruta da Open-Meteo em uma leitura resumida.
 
     Parâmetros:
@@ -129,9 +129,9 @@ def construir_leitura(payload):
     Retorna:
         dict: leitura com médias, somas e máximos prontos para a interface.
     """
-    horario = payload.get("hourly", {}) if isinstance(payload, dict) else {}
+    horario: dict = payload.get("hourly", {}) if isinstance(payload, dict) else {}
 
-    temperaturas = horario.get("temperature_2m", [])
+    temperaturas: list = horario.get("temperature_2m", [])
 
     return {
         "source": "Open-Meteo",
@@ -160,7 +160,7 @@ def construir_leitura(payload):
 
 # Leitura de demonstração usada quando a API externa não responde. Mantém
 # o sistema utilizável mesmo offline, com valores plausíveis.
-LEITURA_DEMONSTRACAO = {
+LEITURA_DEMONSTRACAO: dict = {
     "source": "Demonstração local",
     "updatedAt": "Sem conexão com a API",
     "temperature": 27,
@@ -188,7 +188,7 @@ LEITURA_DEMONSTRACAO = {
 # ---------------------------------------------------------------------------
 # Cálculo dos níveis de atenção (lógica agronômica)
 # ---------------------------------------------------------------------------
-def nivel_irrigacao(leitura):
+def nivel_irrigacao(leitura: dict) -> str:
     """Define a necessidade de irrigação a partir do solo e da demanda hídrica."""
     if (
         leitura["soilMoisture"] < 0.18
@@ -201,7 +201,7 @@ def nivel_irrigacao(leitura):
     return "baixo"
 
 
-def nivel_fungos(leitura):
+def nivel_fungos(leitura: dict) -> str:
     """Estima o risco de proliferação de fungos pela umidade e temperatura."""
     if (
         leitura["humidity"] >= 82
@@ -214,7 +214,7 @@ def nivel_fungos(leitura):
     return "baixo"
 
 
-def nivel_pulverizacao(leitura):
+def nivel_pulverizacao(leitura: dict) -> str:
     """Avalia a janela de pulverização com base em vento, rajadas e chuva."""
     if (
         leitura["wind"] > 15
@@ -227,7 +227,7 @@ def nivel_pulverizacao(leitura):
     return "seguro"
 
 
-def nivel_solo(leitura):
+def nivel_solo(leitura: dict) -> str:
     """Classifica a condição da camada superficial do solo."""
     if leitura["soilMoisture"] < 0.18:
         return "seco"
@@ -236,7 +236,7 @@ def nivel_solo(leitura):
     return "estavel"
 
 
-def nivel_radiacao(leitura):
+def nivel_radiacao(leitura: dict) -> str:
     """Classifica a radiação solar direta disponível."""
     if leitura["radiation"] >= 520:
         return "alto"
@@ -245,7 +245,7 @@ def nivel_radiacao(leitura):
     return "baixo"
 
 
-def calcular_indicadores(leitura):
+def calcular_indicadores(leitura: dict) -> dict:
     """Reúne todos os níveis de atenção em um único dicionário.
 
     Retorna um dicionário no formato ``{ "irrigation": "alto", ... }``.
@@ -264,7 +264,7 @@ def calcular_indicadores(leitura):
 # ---------------------------------------------------------------------------
 # Mensagens associadas a cada combinação de indicador e nível crítico.
 # Usar um dicionário deixa a regra de negócio organizada e fácil de ampliar.
-MENSAGENS_ALERTA = {
+MENSAGENS_ALERTA: dict[tuple[str, str], str] = {
     ("irrigation", "alto"): "Necessidade alta de irrigação nas próximas horas.",
     ("fungus", "alto"): "Risco alto de fungos: observe as folhas e evite excesso de água.",
     ("spray", "evitar"): "Condições desfavoráveis para pulverização: melhor aguardar.",
@@ -273,7 +273,7 @@ MENSAGENS_ALERTA = {
 }
 
 
-def gerar_alertas(indicadores):
+def gerar_alertas(indicadores: dict) -> list[dict]:
     """Monta a lista de alertas a partir dos indicadores calculados.
 
     Apenas as situações realmente críticas viram alerta. Cada alerta é um
@@ -285,7 +285,7 @@ def gerar_alertas(indicadores):
     Retorna:
         list: lista de alertas (pode ser vazia).
     """
-    alertas = []
+    alertas: list[dict] = []
     for (tipo, nivel), mensagem in MENSAGENS_ALERTA.items():
         if indicadores.get(tipo) == nivel:
             alertas.append({"tipo": tipo, "nivel": nivel, "mensagem": mensagem})

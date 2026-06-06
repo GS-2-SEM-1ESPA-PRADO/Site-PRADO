@@ -30,21 +30,21 @@ from datetime import datetime
 # Calculamos os caminhos a partir da localização deste arquivo, assim o
 # backend funciona independentemente de onde o terminal foi aberto.
 
-PASTA_BASE = os.path.dirname(os.path.abspath(__file__))          # .../backend/services
-PASTA_BACKEND = os.path.dirname(PASTA_BASE)                       # .../backend
-PASTA_DADOS = os.path.join(PASTA_BACKEND, "data")                # .../backend/data
-PASTA_USUARIOS = os.path.join(PASTA_DADOS, "usuarios")           # .../backend/data/usuarios
-ARQUIVO_USUARIOS = os.path.join(PASTA_DADOS, "users.json")       # .../backend/data/users.json
+PASTA_BASE: str = os.path.dirname(os.path.abspath(__file__))          # .../backend/services
+PASTA_BACKEND: str = os.path.dirname(PASTA_BASE)                       # .../backend
+PASTA_DADOS: str = os.path.join(PASTA_BACKEND, "data")                # .../backend/data
+PASTA_USUARIOS: str = os.path.join(PASTA_DADOS, "usuarios")           # .../backend/data/usuarios
+ARQUIVO_USUARIOS: str = os.path.join(PASTA_DADOS, "users.json")       # .../backend/data/users.json
 
 # Limites para evitar que os arquivos cresçam sem controle.
-LIMITE_HISTORICO = 50
-LIMITE_ALERTAS = 50
+LIMITE_HISTORICO: int = 50
+LIMITE_ALERTAS: int = 50
 
 
 # ---------------------------------------------------------------------------
 # Utilidades genéricas de arquivo
 # ---------------------------------------------------------------------------
-def garantir_estrutura():
+def garantir_estrutura() -> None:
     """Cria as pastas e o arquivo de usuários caso ainda não existam.
 
     É chamada uma vez quando o servidor sobe. Usa ``exist_ok`` para não
@@ -59,7 +59,7 @@ def garantir_estrutura():
         print(f"[storage] Falha ao preparar a estrutura de dados: {erro}")
 
 
-def carregar_json(caminho, padrao):
+def carregar_json(caminho: str, padrao: list | dict) -> list | dict:
     """Lê um arquivo JSON e devolve o conteúdo.
 
     Parâmetros:
@@ -76,7 +76,7 @@ def carregar_json(caminho, padrao):
 
     try:
         with open(caminho, "r", encoding="utf-8") as arquivo:
-            conteudo = arquivo.read().strip()
+            conteudo: str = arquivo.read().strip()
             if not conteudo:
                 # Arquivo existe mas está vazio.
                 return padrao
@@ -90,7 +90,7 @@ def carregar_json(caminho, padrao):
         return padrao
 
 
-def salvar_json(caminho, dados):
+def salvar_json(caminho: str, dados: list | dict) -> bool:
     """Grava um objeto Python em um arquivo JSON.
 
     Parâmetros:
@@ -114,17 +114,17 @@ def salvar_json(caminho, dados):
 # ---------------------------------------------------------------------------
 # Usuários
 # ---------------------------------------------------------------------------
-def carregar_usuarios():
+def carregar_usuarios() -> list:
     """Retorna a lista de todos os usuários cadastrados."""
     return carregar_json(ARQUIVO_USUARIOS, [])
 
 
-def salvar_usuarios(usuarios):
+def salvar_usuarios(usuarios: list) -> bool:
     """Salva a lista completa de usuários."""
     return salvar_json(ARQUIVO_USUARIOS, usuarios)
 
 
-def buscar_usuario_por_email(email):
+def buscar_usuario_por_email(email: str) -> dict | None:
     """Procura um usuário pelo e-mail (sem diferenciar maiúsculas).
 
     Retorna o dicionário do usuário ou ``None`` se não encontrar.
@@ -136,7 +136,7 @@ def buscar_usuario_por_email(email):
     return None
 
 
-def buscar_usuario_por_token(token):
+def buscar_usuario_por_token(token: str) -> dict | None:
     """Procura um usuário a partir do seu token de sessão.
 
     Retorna o dicionário do usuário ou ``None`` se o token for inválido.
@@ -149,13 +149,13 @@ def buscar_usuario_por_token(token):
     return None
 
 
-def adicionar_usuario(nome, email, senha, token):
+def adicionar_usuario(nome: str, email: str, senha: str, token: str) -> dict:
     """Adiciona um novo usuário ao arquivo central e cria o arquivo de dados dele.
 
     Retorna o dicionário do usuário criado.
     """
-    usuarios = carregar_usuarios()
-    novo = {
+    usuarios: list = carregar_usuarios()
+    novo: dict = {
         "nome": nome.strip(),
         "email": email.strip().lower(),
         "senha": senha,  # Projeto acadêmico: senha simples, sem criptografia.
@@ -179,9 +179,9 @@ def adicionar_usuario(nome, email, senha, token):
     return novo
 
 
-def atualizar_token(email, token):
+def atualizar_token(email: str, token: str) -> bool:
     """Atualiza (ou renova) o token de sessão de um usuário no login."""
-    usuarios = carregar_usuarios()
+    usuarios: list = carregar_usuarios()
     for usuario in usuarios:
         if usuario.get("email", "").lower() == email.strip().lower():
             usuario["token"] = token
@@ -193,36 +193,36 @@ def atualizar_token(email, token):
 # ---------------------------------------------------------------------------
 # Dados individuais de cada usuário
 # ---------------------------------------------------------------------------
-def _nome_arquivo_email(email):
+def _nome_arquivo_email(email: str) -> str:
     """Converte um e-mail em um nome de arquivo seguro.
 
     Exemplo: ``joao@gmail.com`` vira ``joao_gmail_com.json``. Qualquer
     caractere que não seja letra, número ou ``_`` é trocado por ``_``.
     """
-    seguro = re.sub(r"[^a-z0-9]+", "_", (email or "").strip().lower())
+    seguro: str = re.sub(r"[^a-z0-9]+", "_", (email or "").strip().lower())
     seguro = seguro.strip("_") or "anonimo"
     return f"{seguro}.json"
 
 
-def caminho_dados_usuario(email):
+def caminho_dados_usuario(email: str) -> str:
     """Devolve o caminho completo do arquivo JSON de um usuário."""
     return os.path.join(PASTA_USUARIOS, _nome_arquivo_email(email))
 
 
-def carregar_dados_usuario(email):
+def carregar_dados_usuario(email: str) -> dict:
     """Carrega o arquivo de dados de um usuário.
 
     Se o arquivo não existir, devolve uma estrutura vazia padrão, de modo
     que o restante do código sempre receba as chaves esperadas.
     """
-    padrao = {
+    padrao: dict = {
         "email": (email or "").strip().lower(),
         "nome": "",
         "historico": [],
         "favoritos": [],
         "alertas": [],
     }
-    dados = carregar_json(caminho_dados_usuario(email), padrao)
+    dados: dict = carregar_json(caminho_dados_usuario(email), padrao)
 
     # Garante que todas as chaves existam mesmo em arquivos antigos.
     for chave in ("historico", "favoritos", "alertas"):
@@ -231,7 +231,7 @@ def carregar_dados_usuario(email):
     return dados
 
 
-def salvar_dados_usuario(email, dados):
+def salvar_dados_usuario(email: str, dados: dict) -> bool:
     """Salva o arquivo de dados completo de um usuário."""
     return salvar_json(caminho_dados_usuario(email), dados)
 
@@ -239,13 +239,13 @@ def salvar_dados_usuario(email, dados):
 # ---------------------------------------------------------------------------
 # Operações de alto nível: histórico, favoritos e alertas
 # ---------------------------------------------------------------------------
-def _proximo_id(lista):
+def _proximo_id(lista: list) -> int:
     """Calcula um id sequencial simples para uma lista de itens.
 
     Procura o maior id existente e soma 1. Funciona mesmo com a lista
     vazia (retorna 1).
     """
-    maior = 0
+    maior: int = 0
     for item in lista:
         try:
             maior = max(maior, int(item.get("id", 0)))
@@ -254,16 +254,16 @@ def _proximo_id(lista):
     return maior + 1
 
 
-def registrar_consulta(email, local, lat, lon, leitura):
+def registrar_consulta(email: str, local: str, lat: float, lon: float, leitura: dict) -> dict:
     """Registra uma consulta climática no histórico do usuário.
 
     Cada registro guarda o local, as coordenadas, a data/hora e um resumo
     da leitura retornada pela API. O histórico é limitado aos registros
     mais recentes para não crescer indefinidamente.
     """
-    dados = carregar_dados_usuario(email)
+    dados: dict = carregar_dados_usuario(email)
 
-    registro = {
+    registro: dict = {
         "id": _proximo_id(dados["historico"]),
         "local": local,
         "lat": round(float(lat), 4),
@@ -285,7 +285,7 @@ def registrar_consulta(email, local, lat, lon, leitura):
     return registro
 
 
-def registrar_favorito_automatico(email, nome, lat, lon):
+def registrar_favorito_automatico(email: str, nome: str, lat: float, lon: float) -> dict | None:
     """Guarda um local analisado na lista de favoritos, sem duplicar.
 
     Sempre que o usuário analisa uma área, o local é memorizado. Para
@@ -294,19 +294,19 @@ def registrar_favorito_automatico(email, nome, lat, lon):
 
     Retorna o favorito (novo ou já existente) ou ``None`` em caso de erro.
     """
-    dados = carregar_dados_usuario(email)
-    lat_r = round(float(lat), 3)
-    lon_r = round(float(lon), 3)
+    dados: dict = carregar_dados_usuario(email)
+    lat_r: float = round(float(lat), 3)
+    lon_r: float = round(float(lon), 3)
 
     for favorito in dados["favoritos"]:
-        mesmo_local = (
+        mesmo_local: bool = (
             round(float(favorito.get("lat", 0)), 3) == lat_r
             and round(float(favorito.get("lon", 0)), 3) == lon_r
         )
         if mesmo_local:
             return favorito  # Já estava salvo.
 
-    favorito = {
+    favorito: dict = {
         "id": _proximo_id(dados["favoritos"]),
         "nome": nome,
         "lat": round(float(lat), 4),
@@ -318,23 +318,23 @@ def registrar_favorito_automatico(email, nome, lat, lon):
     return favorito
 
 
-def remover_favorito(email, favorito_id):
+def remover_favorito(email: str, favorito_id: int) -> bool:
     """Remove um favorito pelo id. Retorna ``True`` se removeu algo."""
-    dados = carregar_dados_usuario(email)
-    quantidade_antes = len(dados["favoritos"])
+    dados: dict = carregar_dados_usuario(email)
+    quantidade_antes: int = len(dados["favoritos"])
 
     dados["favoritos"] = [
         favorito for favorito in dados["favoritos"]
         if str(favorito.get("id")) != str(favorito_id)
     ]
 
-    removeu = len(dados["favoritos"]) < quantidade_antes
+    removeu: bool = len(dados["favoritos"]) < quantidade_antes
     if removeu:
         salvar_dados_usuario(email, dados)
     return removeu
 
 
-def registrar_alertas(email, local, lista_alertas, lat, lon):
+def registrar_alertas(email: str, local: str, lista_alertas: list[dict], lat: float, lon: float) -> list[dict]:
     """Adiciona alertas relevantes ao usuário, evitando repetição imediata.
 
     Recebe uma lista de alertas já montados pela camada de clima. Antes de
@@ -346,12 +346,12 @@ def registrar_alertas(email, local, lista_alertas, lat, lon):
     if not lista_alertas:
         return []
 
-    dados = carregar_dados_usuario(email)
-    recentes = dados["alertas"][:10]
-    adicionados = []
+    dados: dict = carregar_dados_usuario(email)
+    recentes: list = dados["alertas"][:10]
+    adicionados: list[dict] = []
 
     for alerta in lista_alertas:
-        ja_existe = any(
+        ja_existe: bool = any(
             existente.get("tipo") == alerta.get("tipo")
             and existente.get("nivel") == alerta.get("nivel")
             and existente.get("local") == local
@@ -360,7 +360,7 @@ def registrar_alertas(email, local, lista_alertas, lat, lon):
         if ja_existe:
             continue
 
-        registro = {
+        registro: dict = {
             "id": _proximo_id(dados["alertas"]),
             "tipo": alerta.get("tipo"),
             "nivel": alerta.get("nivel"),
