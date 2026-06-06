@@ -6,7 +6,6 @@ import { encerrarSessao, obterUsuario } from "../lib/api.js";
 const navigationItems = [
   { label: "Inicio", to: "/" },
   { label: "Dashboard", to: "/dashboard" },
-  { label: "Alertas", href: "#alertas" },
   { label: "Dicas", to: "/dicas" },
   { label: "Sobre", to: "/sobre" },
 ];
@@ -57,7 +56,7 @@ function Header() {
   const primeiroNome = usuario ? usuario.nome.split(" ")[0] : "";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[rgb(172_212_148_/_30%)] bg-primary-dark text-white shadow-[0_10px_24px_rgb(59_94_38_/_26%)]">
+    <header className="sticky top-0 z-[2000] w-full border-b border-[rgb(172_212_148_/_30%)] bg-primary-dark text-white shadow-[0_10px_24px_rgb(59_94_38_/_26%)]">
       <div className="mx-auto flex min-h-[76px] w-full max-w-[1440px] flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6 lg:flex-nowrap lg:gap-7 lg:px-10 lg:py-0">
         <NavLink
           className="inline-flex min-w-0 flex-1 items-center gap-3 text-inherit no-underline lg:min-w-[260px] lg:flex-none"
@@ -112,28 +111,9 @@ function Header() {
         </nav>
 
         <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3 lg:min-w-[324px] lg:gap-4">
-          <button
-            className="hidden h-10 items-center gap-2 rounded-lg border border-[rgb(172_212_148_/_25%)] bg-[rgb(59_94_38_/_70%)] px-3.5 text-xs font-bold text-white/90 transition-all duration-200 hover:border-[rgb(172_212_148_/_50%)] hover:bg-primary hover:text-white xl:inline-flex"
-            type="button"
-          >
-            <span
-              className="relative w-3.5 h-3.5 border-2 border-primary-light rounded-[50%_50%_50%_0] rotate-[-45deg] after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:w-1 after:h-1 after:bg-primary-light after:rounded-full"
-              aria-hidden="true"
-            />
-            Fazenda Boa Vista
-            <span
-              className="inline-block w-2 h-2 border-r-2 border-b-2 border-current rotate-45 -translate-y-0.5"
-              aria-hidden="true"
-            />
-          </button>
-
-          <button
-            className="grid h-10 w-10 place-items-center rounded-full border border-transparent bg-transparent transition-all duration-200 hover:bg-[rgb(113_181_73_/_20%)]"
-            type="button"
-            aria-label="Alertas"
-          >
+          
             <Bell className="w-5 h-5 text-primary-light" strokeWidth={2.2} aria-hidden="true" />
-          </button>
+        
 
           <button
             className="hidden h-10 rounded-lg border border-[rgb(172_212_148_/_25%)] bg-[rgb(59_94_38_/_70%)] px-5 text-xs font-bold text-white/90 transition-all duration-200 hover:border-[rgb(172_212_148_/_50%)] hover:bg-primary hover:text-white sm:inline-block"
