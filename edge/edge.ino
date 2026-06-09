@@ -12,8 +12,8 @@
 
 const char* SSID        = "Wokwi-GUEST";
 const char* PASSWORD    = "";
-const char* BROKER_MQTT = "35.247.216.21";
-const int   BROKER_PORT = 1883;
+const char* BROKER_MQTT = "bore.pub";
+const int   BROKER_PORT = 20821;
 const char* ID_MQTT     = "dragon-capsule-001";
 
 const char* TOPIC_SUBSCRIBE = "/TEF/dragon001/cmd";
@@ -212,7 +212,6 @@ void publicaTelemetria() {
   mpu.getEvent(&accel, &gyro, &tempMPU);
 
   int   gasADC  = analogRead(PIN_MQ2_AO);
-  int   gasPct  = (int)constrain((float)(gasADC - 843) / (4041 - 843) * 100.0, 0, 100);
 
   float heading = lerHeading();
   if (headingRef < 0 && heading >= 0) {
@@ -231,12 +230,12 @@ void publicaTelemetria() {
   float dist = lerDistanciaCm();
   float prop = (dist > 0)
                ? constrain(((TANK_HEIGHT_CM - dist) / TANK_HEIGHT_CM) * 100.0, 0, 100)
-               : 0;
+               : -1;
 
   Serial.println("-------------------------------");
   Serial.println("Temp     : " + String(temp, 1) + " C");
   Serial.println("Pressao  : " + String(press, 1) + " hPa");
-  Serial.println("Gas      : " + String(gasPct) + " %");
+  Serial.println("Gas      : " + String(gasADC));
   Serial.println("Heading  : " + String(heading, 1) + " var:" + String(varMag, 1));
   Serial.println("Radiacao : " + (rad < 0 ? String("[offline]") : String(rad, 2) + " mSv/h"));
   Serial.println("Prop     : " + String(prop, 0) + " %");
@@ -248,11 +247,12 @@ void publicaTelemetria() {
     char buf[16];
     dtostrf(temp,                   4, 1, buf); MQTT.publish(TOPIC_TEMP,     buf);
     dtostrf(press,                  6, 1, buf); MQTT.publish(TOPIC_PRESS,    buf);
-    itoa(gasPct,                        buf, 10); MQTT.publish(TOPIC_GAS,    buf);
+    itoa(gasADC,                        buf, 10); MQTT.publish(TOPIC_GAS,    buf);
     dtostrf(heading,                5, 1, buf); MQTT.publish(TOPIC_MAG,      buf);
     MQTT.publish(TOPIC_MAG_FLAG, magFlag ? "1" : "0");
     dtostrf(rad >= 0 ? rad : 0,     5, 2, buf); MQTT.publish(TOPIC_RAD,      buf);
-    dtostrf(prop,                   5, 1, buf); MQTT.publish(TOPIC_PROP,     buf);    dtostrf(accel.acceleration.x,   5, 2, buf); MQTT.publish(TOPIC_AX,       buf);
+    dtostrf(prop,                   5, 1, buf); MQTT.publish(TOPIC_PROP,     buf);
+    dtostrf(accel.acceleration.x,   5, 2, buf); MQTT.publish(TOPIC_AX,       buf);
     dtostrf(accel.acceleration.y,   5, 2, buf); MQTT.publish(TOPIC_AY,       buf);
     dtostrf(accel.acceleration.z,   5, 2, buf); MQTT.publish(TOPIC_AZ,       buf);
   }
@@ -298,5 +298,5 @@ void loop() {
   if (!MQTT.connected()) reconectaMQTT();
   MQTT.loop();
   publicaTelemetria();
-  delay(5000);
+  delay(1000);
 }
