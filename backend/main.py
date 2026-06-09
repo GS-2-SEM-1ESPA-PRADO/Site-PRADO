@@ -20,6 +20,7 @@ Para rodar:
 A API sobe por padrão em http://localhost:8000.
 """
 
+import asyncio
 import os
 import uuid
 
@@ -69,7 +70,117 @@ ATRIBUTOS_DRAGON = (
 # Garante que as pastas e o arquivo de usuários existam ao iniciar.
 storage.garantir_estrutura()
 
-app: FastAPI = FastAPI(title="PRADO API", version="1.0.0")
+# ---------------------------------------------------------------------------
+# Thresholds, mapeamento e disparo de alertas da Dragon
+# ---------------------------------------------------------------------------
+THRESHOLDS_DRAGON = {
+    "temperature": lambda v: v < 10 or v > 40,
+    "pressure":    lambda v: v < 700 or v > 1060,
+    "gas":         lambda v: v > 5,
+    "radiation":   lambda v: v > 2.0,
+    "mag_flag":    lambda v: v == 1,
+    "propellant":  lambda v: v < 10,
+}
+
+ATTR_PARA_CMD = {
+    "temperature": "temp",
+    "pressure":    "press",
+    "gas":         "gas",
+    "radiation":   "rad",
+    "mag_flag":    "mag",
+    "propellant":  "prop",
+}
+
+
+def _disparar_alerta_orion(endereco: str, param: str) -> bool:
+    url = f"http://{endereco}:{PORTA_ORION}/v2/entities/{DRAGON_ID}/attrs"
+    cabecalhos = {
+        "Content-Type": "application/json",
+        "fiware-service": FIWARE_SERVICE,
+        "fiware-servicepath": FIWARE_SERVICEPATH,
+    }
+    payload = {"alerta": {"type": "command", "value": param}}
+    try:
+        resposta = requests.patch(url, json=payload, headers=cabecalhos, timeout=8)
+        return resposta.status_code in (200, 204)
+    except requests.RequestException:
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Scheduler de verificação contínua da Dragon
+# ---------------------------------------------------------------------------
+INTERVALO_VERIFICACAO = 3
+_alertas_ativos: set[str] = set()
+
+
+async def _loop_verificacao_dragon() -> None:
+    global _alertas_ativos
+    await asyncio.sleep(5)
+    while True:
+        try:
+            endereco = FIWARE_URL_PADRAO or "localhost"
+            print(f"[SCHEDULER] Verificando {endereco}...")
+            url = f"http://{endereco}:{PORTA_ORION}/v2/entities/{DRAGON_ID}"
+            cabecalhos = {
+                "fiware-service": FIWARE_SERVICE,
+                "fiware-servicepath": FIWARE_SERVICEPATH,
+            }
+            resposta = requests.get(url, headers=cabecalhos, timeout=5)
+            if resposta.status_code == 200:
+                dados = resposta.json()
+                valores = {}
+                for attr in ATRIBUTOS_DRAGON:
+                    campo = dados.get(attr)
+                    valores[attr] = campo.get("value") if isinstance(campo, dict) else None
+
+                novos_alertas: set[str] = set()
+
+                for attr, threshold_fn in THRESHOLDS_DRAGON.items():
+                    valor = valores.get(attr)
+                    if valor is None:
+                        continue
+                    try:
+                        if threshold_fn(float(valor)):
+                            cmd = ATTR_PARA_CMD[attr]
+                            novos_alertas.add(cmd)
+                            print(f"[SCHEDULER] Alerta: {attr} -> {cmd}")
+                    except (TypeError, ValueError):
+                        continue
+
+                try:
+                    ax = float(valores.get("accel_x") or 0)
+                    ay = float(valores.get("accel_y") or 0)
+                    az = float(valores.get("accel_z") or 0)
+                    if (ax**2 + ay**2 + az**2) ** 0.5 > 50:
+                        novos_alertas.add("accel")
+                except (TypeError, ValueError):
+                    pass
+
+                for cmd in novos_alertas:
+                    _disparar_alerta_orion(endereco, cmd)
+
+                _alertas_ativos = novos_alertas
+            else:
+                print(f"[SCHEDULER] Orion retornou {resposta.status_code}")
+
+        except Exception as e:
+            print(f"[SCHEDULER ERROR] {e}")
+
+        await asyncio.sleep(INTERVALO_VERIFICACAO)
+
+
+async def lifespan(app_: FastAPI):
+    task = asyncio.create_task(_loop_verificacao_dragon())
+    yield
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+
+app: FastAPI = FastAPI(title="PRADO API", version="1.0.0", lifespan=lifespan)
 
 # Libera o acesso a partir do front-end rodando em outra porta (Vite).
 # Em um projeto acadêmico, liberar todas as origens simplifica o uso.
@@ -444,58 +555,7 @@ def dragon_historico(
             pontos.append({"tempo": item.get("recvTime"), "valor": item.get("attrValue")})
     return {"attr": attr, "pontos": pontos}
 
-# ---------------------------------------------------------------------------
-# Thresholds de alerta da Dragon
-# ---------------------------------------------------------------------------
-THRESHOLDS_DRAGON = {
-    "temperature": lambda v: v < 10 or v > 40,
-    "pressure":    lambda v: v < 700 or v > 1060,
-    "gas":         lambda v: v > 1500,
-    "radiation":   lambda v: v > 2.0,
-    "mag_flag":    lambda v: v == 1,
-    "propellant":  lambda v: v < 15,
-}
 
-# mapeamento atributo Orion -> parametro do comando no ESP32
-ATTR_PARA_CMD = {
-    "temperature": "temp",
-    "pressure":    "press",
-    "gas":         "gas",
-    "radiation":   "rad",
-    "mag_flag":    "mag",
-    "propellant":  "prop",
-}
-
-
-def _disparar_alerta_orion(endereco: str, param: str) -> bool:
-    """Envia o comando de alerta para o ESP32 via Orion Context Broker.
-
-    O Orion repassa o comando ao IoT Agent MQTT, que publica no tópico
-    /TEF/dragon001/cmd. O ESP32 recebe e aciona LED + buzzer.
-
-    Retorna True se o comando foi aceito, False caso contrário.
-    """
-    url = f"http://{endereco}:{PORTA_ORION}/v2/entities/{DRAGON_ID}/attrs"
-    cabecalhos = {
-        "Content-Type": "application/json",
-        "fiware-service": FIWARE_SERVICE,
-        "fiware-servicepath": FIWARE_SERVICEPATH,
-    }
-    payload = {
-        "alerta": {
-            "type": "command",
-            "value": param,
-        }
-    }
-    try:
-        resposta = requests.patch(url, json=payload, headers=cabecalhos, timeout=8)
-        print(f"[DEBUG] URL: {url}")
-        print(f"[DEBUG] Payload: {payload}")
-        print(f"[DEBUG] Status: {resposta.status_code}")
-        print(f"[DEBUG] Resposta: {resposta.text}")
-        return resposta.status_code in (200, 204)
-    except requests.RequestException:
-        return False
 
 
 @app.post("/api/dragon/alerta")

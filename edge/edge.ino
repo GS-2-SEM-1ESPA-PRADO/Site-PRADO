@@ -12,8 +12,8 @@
 
 const char* SSID        = "Wokwi-GUEST";
 const char* PASSWORD    = "";
-const char* BROKER_MQTT = "bore.pub";
-const int   BROKER_PORT = 20821;
+const char* BROKER_MQTT = "34.95.208.44";
+const int   BROKER_PORT = 1883;
 const char* ID_MQTT     = "dragon-capsule-001";
 
 const char* TOPIC_SUBSCRIBE = "/TEF/dragon001/cmd";

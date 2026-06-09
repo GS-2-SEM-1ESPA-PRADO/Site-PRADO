@@ -34,8 +34,8 @@ const THRESHOLDS = {
     return null;
   },
   gas: (v) => {
-    if (v > 1500) return { criticidade: "critico",  msg: "Risco de explosão" };
-    if (v > 1003) return { criticidade: "atencao", msg: "Concentração de gás elevada" };
+    if (v > 20) return { criticidade: "critico",  msg: "Risco de explosão" };
+    if (v > 5)  return { criticidade: "atencao", msg: "Concentração de gás elevada" };
     return null;
   },
   radiation: (v) => {
@@ -48,8 +48,8 @@ const THRESHOLDS = {
     return null;
   },
   propellant: (v) => {
-    if (v < 15) return { criticidade: "critico",  msg: "Propelente crítico" };
-    if (v < 30) return { criticidade: "atencao", msg: "Propelente em nível baixo" };
+    if (v < 10) return { criticidade: "critico",  msg: "Propelente crítico" };
+    if (v < 25) return { criticidade: "atencao", msg: "Propelente em nível baixo" };
     return null;
   },
   accel_x: (v) => {
@@ -75,11 +75,10 @@ const ORDEM_CRITICIDADE = ["gas", "radiation", "pressure", "temperature", "accel
 const SENSORES = [
   { attr: "temperature", label: "Temperatura",       unidade: "°C",   icon: Thermometer, dec: 1 },
   { attr: "pressure",    label: "Pressão",            unidade: "hPa",  icon: CircleGauge, dec: 1 },
-  { attr: "gas",         label: "Gás",                unidade: "ADC",  icon: Wind,        dec: 0 },
+  { attr: "gas",         label: "Gás",                unidade: "ppm",    icon: Wind,        dec: 0 },
   { attr: "heading",     label: "Heading magnético",  unidade: "°",    icon: Compass,     dec: 1 },
-  { attr: "mag_flag",    label: "Flag magnética",     unidade: "",     icon: AlertTriangle, dec: 0, flag: true },
   { attr: "radiation",   label: "Radiação",           unidade: "mSv/h",icon: Zap,         dec: 2 },
-  { attr: "propellant",  label: "Propelente",         unidade: "%",    icon: Fuel,        dec: 0 },
+  { attr: "propellant",  label: "Combustível Propelente",         unidade: "%",    icon: Fuel,        dec: 0 },
   { attr: "accel_x",     label: "Aceleração X",       unidade: "m/s²", icon: Move3d,      dec: 2 },
   { attr: "accel_y",     label: "Aceleração Y",       unidade: "m/s²", icon: Activity,    dec: 2 },
   { attr: "accel_z",     label: "Aceleração Z",       unidade: "m/s²", icon: Move3d,      dec: 2 },
@@ -111,7 +110,7 @@ function MiniGrafico({ valores, criticidade }) {
 
   if (nums.length < 2) {
     return (
-      <div className="flex h-[60px] items-center justify-center rounded-lg bg-[#f7f4ea] text-[11px] text-[#9aa089]">
+      <div className="flex h-[60px] items-center justify-center rounded-lg bg-[#edeada] text-[11px] text-[#3d4637]/40">
         aguardando histórico...
       </div>
     );
@@ -211,20 +210,20 @@ function Edge() {
   const alertaCritico = alertasAtivos.find((a) => a.criticidade === "critico");
 
   return (
-    <main className="min-h-[calc(100vh-76px)] bg-[#f7f4ea] px-4 py-10 text-[#16281e] sm:px-6 sm:py-14">
+    <main className="min-h-[calc(100vh-76px)] bg-[#f8f7f3] px-4 py-10 text-[#182116] sm:px-6 sm:py-14">
       <div className="mx-auto w-full max-w-[1180px]">
 
         {/* Cabeçalho */}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#71b549]/30 bg-white px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-[#3b5e26] shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#71b549]/25 bg-[#71b549]/12 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-[#3b5e26]">
               <Satellite className="h-3.5 w-3.5" aria-hidden="true" />
               Edge · Telemetria orbital
             </span>
-            <h1 className="mt-4 font-serif text-[clamp(2rem,5vw,3rem)] leading-none tracking-normal text-[#16281e]">
+            <h1 className="mt-4 font-serif text-[clamp(2rem,5vw,3rem)] leading-none tracking-normal text-[#182116]">
               Cápsula Dragon
             </h1>
-            <p className="mt-3 max-w-[620px] text-sm leading-6 text-[#3d4637]">
+            <p className="mt-3 max-w-[620px] text-sm leading-6 text-[#3d4637]/80">
               Painel em tempo real dos sensores da cápsula, lidos do FIWARE.
               Os valores e os gráficos se atualizam automaticamente a cada
               poucos segundos.
@@ -241,7 +240,7 @@ function Edge() {
                 Conectado
               </span>
               {ultimaAtualizacao && (
-                <p className="mt-2 text-[11px] text-[#6e765f]">
+                <p className="mt-2 text-[11px] text-[#3d4637]/50">
                   Atualizado às {ultimaAtualizacao.toLocaleTimeString("pt-BR")}
                 </p>
               )}
@@ -250,15 +249,15 @@ function Edge() {
         </div>
 
         {/* Barra de conexão */}
-        <div className="mt-7 rounded-2xl border border-[#ded8c3] bg-white p-4 shadow-sm sm:p-5">
-          <label className="block text-[11px] font-extrabold uppercase tracking-widest text-[#6e765f]">
+        <div className="mt-7 rounded-2xl border border-[#ded8c3] bg-white p-4 sm:p-5">
+          <label className="block text-[11px] font-extrabold uppercase tracking-widest text-[#3b5e26]">
             IP da VM do FIWARE
           </label>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-            <span className="flex flex-1 items-center gap-2 rounded-xl border border-[#e1ddca] bg-[#f7f4ea] px-3 focus-within:border-[#71b549]">
-              <Plug className="h-4 w-4 flex-none text-[#9aa089]" aria-hidden="true" />
+            <span className="flex flex-1 items-center gap-2 rounded-xl border border-[#ded8c3] bg-[#f8f7f3] px-3 focus-within:border-[#71b549]">
+              <Plug className="h-4 w-4 flex-none text-[#3d4637]/50" aria-hidden="true" />
               <input
-                className="h-12 w-full bg-transparent text-[#16281e] outline-none placeholder:text-[#9aa089]"
+                className="h-12 w-full bg-transparent text-[#182116] outline-none placeholder:text-[#3d4637]/40"
                 type="text"
                 placeholder="Ex.: 34.39.176.77  (vazio = usar o IP do servidor)"
                 value={host}
@@ -267,7 +266,7 @@ function Edge() {
             </span>
             {!conectado ? (
               <button
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#71b549] px-6 text-sm font-extrabold text-[#0b1e10] transition hover:bg-[#80c456]"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#71b549] px-6 text-sm font-extrabold text-white transition hover:bg-[#5f9e3a]"
                 type="button"
                 onClick={conectar}
               >
@@ -277,7 +276,7 @@ function Edge() {
             ) : (
               <div className="flex gap-3">
                 <button
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[#71b549]/40 bg-[#71b549]/10 px-5 text-sm font-extrabold text-[#3b5e26] transition hover:bg-[#71b549]/20 disabled:opacity-60"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[#71b549]/30 bg-[#71b549]/12 px-5 text-sm font-extrabold text-[#3b5e26] transition hover:bg-[#71b549]/20 disabled:opacity-60"
                   type="button"
                   onClick={atualizar}
                   disabled={atualizando}
@@ -286,7 +285,7 @@ function Edge() {
                   Atualizar
                 </button>
                 <button
-                  className="inline-flex h-12 items-center justify-center rounded-xl border border-[#e1ddca] px-5 text-sm font-extrabold text-[#3d4637] transition hover:bg-[#f7f4ea]"
+                  className="inline-flex h-12 items-center justify-center rounded-xl border border-[#ded8c3] px-5 text-sm font-extrabold text-[#3d4637]/70 transition hover:bg-white/5"
                   type="button"
                   onClick={desconectar}
                 >
@@ -295,9 +294,9 @@ function Edge() {
               </div>
             )}
           </div>
-          <p className="mt-3 text-xs text-[#6e765f]">
+          <p className="mt-3 text-xs text-[#3d4637]/50">
             Deixe o campo vazio para usar o IP configurado no servidor
-            (arquivo <code className="text-[#3d4637]">.env</code>). O valor digitado aqui tem prioridade.
+            (arquivo <code className="text-[#3d4637]/70">.env</code>). O valor digitado aqui tem prioridade.
           </p>
         </div>
 
@@ -307,7 +306,7 @@ function Edge() {
             <AlertTriangle className="h-5 w-5 flex-none text-[#ef8b6a]" aria-hidden="true" />
             <div>
               <p className="text-sm font-bold text-[#ef8b6a]">{erro}</p>
-              <p className="mt-1 text-xs text-white/50">
+             <p className="mt-1 text-xs text-[#3d4637]/50">
                 Confira se o IP está correto, se a VM está ligada e se as portas 1026 e 8666 estão acessíveis.
               </p>
             </div>
@@ -340,12 +339,12 @@ function Edge() {
 
         {/* Estado inicial */}
         {!conectado && (
-          <div className="mt-8 grid place-items-center rounded-2xl border border-[#ded8c3] bg-white p-12 text-center shadow-sm">
+          <div className="mt-8 grid place-items-center rounded-2xl border border-[#ded8c3] bg-white p-12 text-center">
             <span className="grid h-16 w-16 place-items-center rounded-2xl bg-[#71b549]/12 text-[#3b5e26]">
               <Satellite className="h-8 w-8" aria-hidden="true" />
             </span>
-            <h2 className="mt-4 text-lg font-black text-[#16281e]">Pronto para acompanhar a missão</h2>
-            <p className="mt-2 max-w-[460px] text-sm leading-6 text-[#3d4637]">
+            <h2 className="mt-4 text-lg font-black text-[#182116]">Pronto para acompanhar a missão</h2>
+            <p className="mt-2 max-w-[460px] text-sm leading-6 text-[#3d4637]/80">
               Informe o IP da VM (ou deixe vazio para usar o do servidor) e clique em Conectar para ver a telemetria da cápsula ao vivo.
             </p>
           </div>
@@ -366,21 +365,21 @@ function Edge() {
                 ? "border-red-500/50"
                 : atencao
                 ? "border-orange-400/50"
-                : "border-[#e1ddca]";
+                : "border-[#ded8c3]";
 
               const valorClass = critico
                 ? "text-red-400"
                 : atencao
                 ? "text-orange-400"
-                : "text-[#16281e]";
+                : "text-[#182116]";
 
               return (
                 <article
                   key={sensor.attr}
-                  className={`rounded-2xl border bg-white p-5 shadow-sm transition ${borderClass} ${critico ? "shadow-[0_0_16px_rgba(239,68,68,0.15)]" : ""}`}
+                  className={`rounded-2xl border bg-white p-5 transition ${borderClass} ${critico ? "shadow-[0_0_16px_rgba(239,68,68,0.15)]" : ""}`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-[#6e765f]">
+                    <span className="inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest text-[#3b5e26]">
                       <Icone className="h-4 w-4" aria-hidden="true" />
                       {sensor.label}
                     </span>
@@ -401,7 +400,7 @@ function Edge() {
                       {valorAtual}
                     </strong>
                     {sensor.unidade && !sensor.flag && (
-                      <span className="text-sm font-semibold text-[#6e765f]">{sensor.unidade}</span>
+                      <span className="text-sm font-semibold text-[#3d4637]/60">{sensor.unidade}</span>
                     )}
                   </div>
 
