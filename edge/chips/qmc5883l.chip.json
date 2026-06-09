@@ -1,0 +1,26 @@
+{
+  "name": "qmc5883l",
+  "author": "jumpjack",
+  "pins": [
+    "VCC",
+    "GND",
+    "SCL",
+    "SDA",
+    "DRDY",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "controls": [
+    {
+      "id": "azimuth",
+      "label": "azimuth",
+      "type": "range",
+      "min": 0,
+      "max": 359,
+      "step": 1
+    }
+  ]
+}

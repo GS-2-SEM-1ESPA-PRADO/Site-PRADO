@@ -489,6 +489,10 @@ def _disparar_alerta_orion(endereco: str, param: str) -> bool:
     }
     try:
         resposta = requests.patch(url, json=payload, headers=cabecalhos, timeout=8)
+        print(f"[DEBUG] URL: {url}")
+        print(f"[DEBUG] Payload: {payload}")
+        print(f"[DEBUG] Status: {resposta.status_code}")
+        print(f"[DEBUG] Resposta: {resposta.text}")
         return resposta.status_code in (200, 204)
     except requests.RequestException:
         return False

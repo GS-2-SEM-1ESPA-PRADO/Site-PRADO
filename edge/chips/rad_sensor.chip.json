@@ -1,0 +1,20 @@
+{
+  "name": "rad_sensor",
+  "author": "Dragon Telemetry",
+  "pins": [
+    "VCC",
+    "GND",
+    "SCL",
+    "SDA"
+  ],
+  "controls": [
+    {
+      "id": "radiation",
+      "label": "Radiation (mSv/h)",
+      "type": "range",
+      "min": 0,
+      "max": 1000,
+      "step": 1
+    }
+  ]
+}
