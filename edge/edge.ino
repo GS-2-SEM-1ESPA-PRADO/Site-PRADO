@@ -168,10 +168,14 @@ void conectaWiFi() {
   if (WiFi.status() == WL_CONNECTED) return;
   WiFi.begin(SSID, PASSWORD);
   Serial.print("[WiFi] Conectando");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500); Serial.print(".");
+  int t = 0;
+  while (WiFi.status() != WL_CONNECTED && t < 20) {
+    delay(500); Serial.print("."); t++;
   }
-  Serial.println("\n[WiFi] OK: " + WiFi.localIP().toString());
+  if (WiFi.status() == WL_CONNECTED)
+    Serial.println("\n[WiFi] OK: " + WiFi.localIP().toString());
+  else
+    Serial.println("\n[WiFi] Falhou");
 }
 
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
@@ -208,6 +212,7 @@ void publicaTelemetria() {
   mpu.getEvent(&accel, &gyro, &tempMPU);
 
   int   gasADC  = analogRead(PIN_MQ2_AO);
+  int   gasPct  = (int)constrain((float)(gasADC - 843) / (4041 - 843) * 100.0, 0, 100);
 
   float heading = lerHeading();
   if (headingRef < 0 && heading >= 0) {
@@ -226,12 +231,12 @@ void publicaTelemetria() {
   float dist = lerDistanciaCm();
   float prop = (dist > 0)
                ? constrain(((TANK_HEIGHT_CM - dist) / TANK_HEIGHT_CM) * 100.0, 0, 100)
-               : -1;
+               : 0;
 
   Serial.println("-------------------------------");
   Serial.println("Temp     : " + String(temp, 1) + " C");
   Serial.println("Pressao  : " + String(press, 1) + " hPa");
-  Serial.println("Gas      : " + String(gasADC));
+  Serial.println("Gas      : " + String(gasPct) + " %");
   Serial.println("Heading  : " + String(heading, 1) + " var:" + String(varMag, 1));
   Serial.println("Radiacao : " + (rad < 0 ? String("[offline]") : String(rad, 2) + " mSv/h"));
   Serial.println("Prop     : " + String(prop, 0) + " %");
@@ -243,12 +248,11 @@ void publicaTelemetria() {
     char buf[16];
     dtostrf(temp,                   4, 1, buf); MQTT.publish(TOPIC_TEMP,     buf);
     dtostrf(press,                  6, 1, buf); MQTT.publish(TOPIC_PRESS,    buf);
-    itoa(gasADC,                        buf, 10); MQTT.publish(TOPIC_GAS,    buf);
+    itoa(gasPct,                        buf, 10); MQTT.publish(TOPIC_GAS,    buf);
     dtostrf(heading,                5, 1, buf); MQTT.publish(TOPIC_MAG,      buf);
     MQTT.publish(TOPIC_MAG_FLAG, magFlag ? "1" : "0");
     dtostrf(rad >= 0 ? rad : 0,     5, 2, buf); MQTT.publish(TOPIC_RAD,      buf);
-    dtostrf(prop,                   5, 1, buf); MQTT.publish(TOPIC_PROP,     buf);
-    dtostrf(accel.acceleration.x,   5, 2, buf); MQTT.publish(TOPIC_AX,       buf);
+    dtostrf(prop,                   5, 1, buf); MQTT.publish(TOPIC_PROP,     buf);    dtostrf(accel.acceleration.x,   5, 2, buf); MQTT.publish(TOPIC_AX,       buf);
     dtostrf(accel.acceleration.y,   5, 2, buf); MQTT.publish(TOPIC_AY,       buf);
     dtostrf(accel.acceleration.z,   5, 2, buf); MQTT.publish(TOPIC_AZ,       buf);
   }
@@ -291,7 +295,6 @@ void setup() {
 }
 
 void loop() {
-  conectaWiFi();
   if (!MQTT.connected()) reconectaMQTT();
   MQTT.loop();
   publicaTelemetria();
