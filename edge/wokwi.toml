@@ -1,0 +1,13 @@
+[wokwi]
+version = 1
+firmware = 'build/edge.ino.bin'
+elf = 'build/edge.ino.elf'
+iotGateway = true
+
+[[chip]]
+name = 'rad_sensor'
+binary = 'chips/rad_sensor.chip.wasm'
+
+[[chip]]
+name = 'qmc5883l'
+binary = 'chips/qmc5883l.chip.wasm'

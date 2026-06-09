@@ -1,0 +1,12 @@
+# Ambiente Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Variáveis de ambiente (contêm chaves)
+.env
+
+# Dados gerados em tempo de execução (cada usuário tem o seu)
+data/users.json
+data/usuarios/*.json
