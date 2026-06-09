@@ -76,8 +76,12 @@ O sistema opera em duas camadas:
 
 ---
 
-## Arquitetura
+## Arquitetura IOT
+<p align="center">
+  <img src="frontend/src/assets/architeture.png" alt="Arquitetura do Sistema" width="700">
+</p>
 
+## Fluxo de dados
 ```mermaid
 flowchart TD
     subgraph IOT["IoT — Dragon Capsule (ESP32)"]
