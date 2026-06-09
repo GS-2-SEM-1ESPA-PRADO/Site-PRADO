@@ -9,6 +9,7 @@ import Auth from "../features/auth/Auth";
 import MainLayout from "../layouts/MainLayout";
 import Mapa from "../components/Mapa.jsx";
 import { estaLogado } from "../lib/api.js";
+import Alertas from "../features/alerts/Alertas.jsx";
 
 // Componente que protege uma rota: se ninguém estiver logado, redireciona
 // para a página de login, lembrando para onde o usuário queria ir.
@@ -33,6 +34,7 @@ function AppRoutes() {
           <Route path="dicas" element={<Dicas />} />
           <Route path="sobre" element={<Sobre />} />
 
+
           {/* Páginas que exigem login */}
           <Route
             path="dashboard"
@@ -42,6 +44,15 @@ function AppRoutes() {
               </RotaProtegida>
             }
           />
+          <Route
+            path="alertas"
+            element={
+              <RotaProtegida>
+                <Alertas />
+              </RotaProtegida>
+            }
+          />
+
           <Route
             path="mapa"
             element={
@@ -55,11 +66,14 @@ function AppRoutes() {
             element={
               <RotaProtegida>
                 <Edge />
+
               </RotaProtegida>
             }
           />
         </Route>
         <Route path="*" element={<ErrorPage />} />
+
+
       </Routes>
     </BrowserRouter>
   );

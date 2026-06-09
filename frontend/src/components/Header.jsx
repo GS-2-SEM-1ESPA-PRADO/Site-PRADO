@@ -6,6 +6,7 @@ import { encerrarSessao, obterUsuario } from "../lib/api.js";
 const navigationItems = [
   { label: "Inicio", to: "/" },
   { label: "Dashboard", to: "/dashboard" },
+  { label: "Alertas", to: "/alertas" },
   { label: "Dicas", to: "/dicas" },
   { label: "Sobre", to: "/sobre" },
 ];
@@ -111,9 +112,14 @@ function Header() {
         </nav>
 
         <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3 lg:min-w-[324px] lg:gap-4">
-          
+          <button
+            className="grid h-10 w-10 place-items-center rounded-full border border-transparent bg-transparent transition-all duration-200 hover:bg-[rgb(113_181_73_/_20%)]"
+            type="button"
+            aria-label="Alertas"
+            onClick={() => navigate("/alertas")}
+          >
             <Bell className="w-5 h-5 text-primary-light" strokeWidth={2.2} aria-hidden="true" />
-        
+          </button>
 
           <button
             className="hidden h-10 rounded-lg border border-[rgb(172_212_148_/_25%)] bg-[rgb(59_94_38_/_70%)] px-5 text-xs font-bold text-white/90 transition-all duration-200 hover:border-[rgb(172_212_148_/_50%)] hover:bg-primary hover:text-white sm:inline-block"
