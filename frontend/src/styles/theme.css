@@ -1,4 +1,6 @@
-:root {
+@import "tailwindcss";
+
+@theme {
   --color-primary: #71b549;
   --color-primary-light: #acd494;
   --color-primary-dark: #3b5e26;
@@ -22,7 +24,3 @@ html {
 button {
   cursor: pointer;
 }
-
-/* body {
-  font-family: 'Inter', sans-serif;
-} */

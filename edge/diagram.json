@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "author": "Dragon Telemetry",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    {
+      "type": "board-bmp180",
+      "id": "bmp1",
+      "top": -90.56,
+      "left": 221.06,
+      "attrs": { "temperature": "22", "pressure": "101325" }
+    },
+    { "type": "wokwi-mpu6050", "id": "mpu1", "top": 176.62, "left": 175.12, "attrs": {} },
+    {
+      "type": "wokwi-gas-sensor",
+      "id": "mq2",
+      "top": 156.3,
+      "left": -194.6,
+      "attrs": { "ppm": "400", "threshold": "2.5" }
+    },
+    { "type": "wokwi-hc-sr04", "id": "hcsr1", "top": -142.5, "left": -330.5, "attrs": {} },
+    {
+      "type": "chip-qmc5883l",
+      "id": "mag1",
+      "top": 173.82,
+      "left": 465.6,
+      "attrs": { "azimuth": "45" }
+    },
+    {
+      "type": "chip-rad_sensor",
+      "id": "rad1",
+      "top": 183.42,
+      "left": 292.8,
+      "attrs": { "radiation": "50" }
+    },
+    {
+      "type": "wokwi-rgb-led",
+      "id": "led1",
+      "top": -149.6,
+      "left": -104.5,
+      "attrs": { "common": "cathode" }
+    },
+    { "type": "wokwi-buzzer", "id": "bz1", "top": -132, "left": 117, "attrs": {} },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": -73.4,
+      "left": -125.65,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": -73.4,
+      "left": -106.45,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r3",
+      "top": -73.4,
+      "left": -96.85,
+      "rotate": 270,
+      "attrs": { "value": "220" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
+    [ "esp:3V3", "bmp1:VCC", "red", [ "h225.1", "v-244.9" ] ],
+    [ "esp:GND.1", "bmp1:GND", "black", [ "h215.5", "v-225.99" ] ],
+    [ "esp:D21", "bmp1:SDA", "blue", [ "h196.3", "v-120.69" ] ],
+    [ "esp:D22", "bmp1:SCL", "yellow", [ "h205.9", "v-101.39" ] ],
+    [ "esp:3V3", "mpu1:VCC", "red", [] ],
+    [ "esp:GND.1", "mpu1:GND", "black", [] ],
+    [ "esp:D21", "mpu1:SDA", "blue", [] ],
+    [ "esp:D22", "mpu1:SCL", "yellow", [] ],
+    [ "esp:GND.1", "mpu1:AD0", "black", [] ],
+    [ "esp:VIN", "mq2:VCC", "red", [] ],
+    [ "esp:D34", "mq2:AOUT", "orange", [] ],
+    [ "esp:D33", "mq2:DOUT", "brown", [ "h-53", "v101" ] ],
+    [ "esp:VIN", "hcsr1:VCC", "red", [] ],
+    [ "esp:D13", "hcsr1:TRIG", "orange", [] ],
+    [ "esp:D12", "hcsr1:ECHO", "purple", [] ],
+    [ "esp:3V3", "mag1:VCC", "red", [] ],
+    [ "esp:GND.1", "mag1:GND", "black", [] ],
+    [ "esp:D21", "mag1:SDA", "blue", [ "h340.3", "v148.3" ] ],
+    [ "esp:D22", "mag1:SCL", "yellow", [ "h349.9", "v167.6" ] ],
+    [ "esp:3V3", "rad1:VCC", "red", [] ],
+    [ "esp:GND.1", "rad1:GND", "black", [ "h177.1", "v52.6" ] ],
+    [ "esp:D21", "rad1:SDA", "blue", [] ],
+    [ "esp:D22", "rad1:SCL", "yellow", [ "h13.9", "v14", "h297.6", "v153.6" ] ],
+    [ "esp:D25", "r1:1", "red", [] ],
+    [ "r1:2", "led1:R", "red", [] ],
+    [ "esp:D26", "r2:1", "green", [] ],
+    [ "r2:2", "led1:G", "green", [] ],
+    [ "esp:D27", "r3:1", "blue", [] ],
+    [ "r3:2", "led1:B", "blue", [] ],
+    [ "esp:D23", "bz1:1", "orange", [] ],
+    [ "esp:GND.1", "bz1:2", "black", [] ],
+    [ "led1:COM", "esp:GND.2", "black", [ "v0" ] ],
+    [ "mq2:GND", "esp:GND.2", "black", [ "h48", "v-43.8" ] ],
+    [ "hcsr1:GND", "esp:GND.2", "black", [ "v0" ] ]
+  ],
+  "serialMonitor": { "display": "always" },
+  "dependencies": {}
+}
