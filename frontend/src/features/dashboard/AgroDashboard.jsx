@@ -14,6 +14,7 @@ import {
   MapPin,
   MousePointer2,
   RefreshCw,
+  Search,
   Satellite,
   SlidersHorizontal,
   Sprout,
@@ -24,6 +25,7 @@ import {
   Tractor,
   TrendingUp,
   Wind,
+  X,
 } from "lucide-react";
 import {
   Circle,
@@ -131,6 +133,59 @@ const brazilStateCodes = {
   TOCANTINS: "TO",
 };
 
+const searchAliases = {
+  AC: "Rio Branco AC",
+  AL: "Maceio AL",
+  AP: "Macapa AP",
+  AM: "Manaus AM",
+  BA: "Salvador BA",
+  CE: "Fortaleza CE",
+  DF: "Brasilia DF",
+  ES: "Vitoria ES",
+  GO: "Goiania GO",
+  MA: "Sao Luis MA",
+  MT: "Cuiaba MT",
+  MS: "Campo Grande MS",
+  MG: "Belo Horizonte MG",
+  PA: "Belem PA",
+  PB: "Joao Pessoa PB",
+  PR: "Curitiba PR",
+  PE: "Recife PE",
+  PI: "Teresina PI",
+  RJ: "Rio de Janeiro RJ",
+  RN: "Natal RN",
+  RS: "Porto Alegre RS",
+  RO: "Porto Velho RO",
+  RR: "Boa Vista RR",
+  SC: "Florianopolis SC",
+  SP: "Sao Paulo SP",
+  SE: "Aracaju SE",
+  TO: "Palmas TO",
+};
+
+const blockedSearchTypes = new Set([
+  "highway",
+  "road",
+  "route",
+  "street",
+  "residential",
+  "primary",
+  "secondary",
+  "tertiary",
+  "trunk",
+  "motorway",
+]);
+
+const preferredSearchKeys = [
+  "city",
+  "town",
+  "village",
+  "municipality",
+  "county",
+  "state",
+  "state_district",
+];
+
 const fallbackReadings = {
   source: "Demonstração local",
   updatedAt: "Sem conexão com a API",
@@ -192,6 +247,81 @@ function stateCodeFromAddress(address = {}) {
 
   if (state.length === 2) return state.toUpperCase();
   return brazilStateCodes[normalizeText(state)] || state;
+}
+
+function nameFromAddress(address = {}, fallback = "Regiao encontrada") {
+  return (
+    address.city ||
+    address.town ||
+    address.village ||
+    address.municipality ||
+    address.county ||
+    address.state_district ||
+    fallback
+  );
+}
+
+function searchTermForGeocoder(term) {
+  const normalized = normalizeText(term);
+  return searchAliases[normalized] || term;
+}
+
+function resultPriority(result) {
+  const address = result.address || {};
+  const normalizedType = normalizeText(result.type).toLowerCase();
+  const normalizedClass = normalizeText(result.class).toLowerCase();
+
+  if (blockedSearchTypes.has(normalizedType) || blockedSearchTypes.has(normalizedClass)) {
+    return -1;
+  }
+
+  const preferredIndex = preferredSearchKeys.findIndex((key) => Boolean(address[key]));
+  if (preferredIndex >= 0) {
+    return 100 - preferredIndex;
+  }
+
+  if (result.type === "administrative" || result.class === "boundary") {
+    return 60;
+  }
+
+  return 10;
+}
+
+function cleanSearchResults(results) {
+  return [...results]
+    .map((result) => ({ result, priority: resultPriority(result) }))
+    .filter((item) => item.priority >= 0)
+    .sort((a, b) => b.priority - a.priority)
+    .map((item) => item.result);
+}
+
+function searchResultToArea(result, fallback = "Regiao pesquisada") {
+  const address = result.address || {};
+  const lat = Number(result.lat);
+  const lon = Number(result.lon);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    throw new Error("Coordenadas invalidas.");
+  }
+
+  return {
+    name: nameFromAddress(address, fallback),
+    state: stateCodeFromAddress(address),
+    crop: address.county || address.state || result.type || "Regiao pesquisada",
+    lat,
+    lon,
+  };
+}
+
+function searchResultLabel(result) {
+  const address = result.address || {};
+  return [
+    nameFromAddress(address, result.name || "Regiao"),
+    stateCodeFromAddress(address),
+    address.country,
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 function areaLabel(area) {
@@ -592,6 +722,12 @@ function AgroDashboard() {
   const [selectedCell, setSelectedCell] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLocating, setIsLocating] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchError, setSearchError] = useState("");
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [apiStatus, setApiStatus] = useState("Carregando API");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -655,13 +791,76 @@ function AgroDashboard() {
     };
   }, [refreshKey, selectedArea]);
 
+  useEffect(() => {
+    const term = searchQuery.trim();
+    const isKnownAlias = Boolean(searchAliases[normalizeText(term)]);
+
+    if (term.length < 3 && !isKnownAlias) {
+      setSearchSuggestions([]);
+      setIsSuggesting(false);
+      return undefined;
+    }
+
+    const geocoderTerm = searchTermForGeocoder(term);
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(async () => {
+      setIsSuggesting(true);
+
+      try {
+        const params = new URLSearchParams({
+          q: geocoderTerm,
+          format: "json",
+          addressdetails: "1",
+          limit: "8",
+          countrycodes: "br",
+          "accept-language": "pt-BR",
+        });
+
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?${params.toString()}`,
+          {
+            headers: { "Accept-Language": "pt-BR" },
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Falha ao buscar sugestoes.");
+        }
+
+        const results = await response.json();
+        setSearchSuggestions(cleanSearchResults(results).slice(0, 5));
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setSearchSuggestions([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsSuggesting(false);
+        }
+      }
+    }, 350);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchQuery]);
+
   function selectRegion(region) {
+    placeLookupId.current += 1;
     setSelectedCell(null);
+    setSearchError("");
+    setIsSearching(false);
+    setShowSuggestions(false);
     setSelectedArea(region);
   }
 
  async function pickMapPoint(latlng) {
   setSelectedCell(null);
+  setSearchError("");
+  setIsSearching(false);
   setIsLoading(false);
   setApiStatus("Identificando localização");
   const lookupId = placeLookupId.current + 1;
@@ -723,7 +922,97 @@ function AgroDashboard() {
   }
 }
 
+  async function searchRegion(event) {
+    event.preventDefault();
+
+    const term = searchQuery.trim();
+    if (!term) {
+      setSearchError("Digite uma cidade, estado ou regiao.");
+      return;
+    }
+
+    const lookupId = placeLookupId.current + 1;
+    placeLookupId.current = lookupId;
+
+    setSearchError("");
+    setIsSearching(true);
+    setSelectedCell(null);
+    setShowSuggestions(false);
+    setApiStatus("Buscando regiao");
+
+    try {
+      const geocoderTerm = searchTermForGeocoder(term);
+      const params = new URLSearchParams({
+        q: geocoderTerm,
+        format: "json",
+        addressdetails: "1",
+        limit: "8",
+        countrycodes: "br",
+        "accept-language": "pt-BR",
+      });
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`,
+        { headers: { "Accept-Language": "pt-BR" } },
+      );
+
+      if (!response.ok) {
+        throw new Error("Falha ao buscar a regiao.");
+      }
+
+      const results = cleanSearchResults(await response.json());
+      if (lookupId !== placeLookupId.current) return;
+
+      const result = results[0];
+      if (!result) {
+        setSearchError("Nenhuma cidade ou regiao encontrada. Tente cidade e estado, como: Londrina PR.");
+        setApiStatus("Regiao nao encontrada");
+        setSearchSuggestions([]);
+        return;
+      }
+
+      setSearchSuggestions(results);
+      setSelectedArea(searchResultToArea(result, term));
+    } catch {
+      if (lookupId !== placeLookupId.current) return;
+      setSearchError("Nao foi possivel buscar essa regiao agora.");
+      setApiStatus("Busca indisponivel");
+    } finally {
+      if (lookupId === placeLookupId.current) {
+        setIsSearching(false);
+      }
+    }
+  }
+
+  function selectSearchResult(result) {
+    try {
+      placeLookupId.current += 1;
+      setSelectedCell(null);
+      setSearchError("");
+      setIsSearching(false);
+      setShowSuggestions(false);
+      setSearchQuery(searchResultLabel(result));
+      setSelectedArea(searchResultToArea(result, searchQuery.trim()));
+    } catch {
+      setSearchError("Nao foi possivel usar essa sugestao.");
+    }
+  }
+
+  function clearSearch() {
+    placeLookupId.current += 1;
+    setSearchQuery("");
+    setSearchError("");
+    setSearchSuggestions([]);
+    setShowSuggestions(false);
+    setIsSearching(false);
+  }
+
   function locateUser() {
+    placeLookupId.current += 1;
+    setSearchError("");
+    setIsSearching(false);
+    setShowSuggestions(false);
+
     if (!navigator.geolocation) {
       setApiStatus("Geolocalização indisponível");
       return;
@@ -777,6 +1066,116 @@ function AgroDashboard() {
             Atualizar dados
           </button>
         </div>
+
+        <form
+          className="mb-4 rounded-[18px] border border-[#d9d4bd] bg-white p-3 shadow-sm"
+          onSubmit={searchRegion}
+        >
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
+            <div className="relative flex-1">
+              <label className="flex min-h-12 items-center gap-3 rounded-xl border border-[#e1ddca] bg-[#faf9f3] px-4 text-[#16281e] focus-within:border-[#71b549]">
+                <Search className="h-5 w-5 shrink-0 text-[#3b5e26]" aria-hidden="true" />
+                <span className="sr-only">Pesquisar regiao no mapa</span>
+                <input
+                  autoComplete="off"
+                  className="h-12 w-full bg-transparent text-sm font-semibold text-[#16281e] outline-none placeholder:text-[#6e765f]"
+                  onChange={(event) => {
+                    setSearchQuery(event.target.value);
+                    setShowSuggestions(true);
+                    if (searchError) setSearchError("");
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  placeholder="Digite cidade, sigla do estado ou regiao rural"
+                  type="search"
+                  value={searchQuery}
+                />
+                {isSuggesting && (
+                  <RefreshCw className="h-4 w-4 shrink-0 animate-spin text-[#6e765f]" aria-hidden="true" />
+                )}
+                {searchQuery && !isSuggesting && (
+                  <button
+                    aria-label="Limpar pesquisa"
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[#6e765f] transition hover:bg-[#e7eadb] hover:text-[#16281e]"
+                    onClick={clearSearch}
+                    type="button"
+                  >
+                    <X className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )}
+              </label>
+
+              {showSuggestions &&
+                (searchQuery.trim().length >= 3 ||
+                  Boolean(searchAliases[normalizeText(searchQuery)])) && (
+                <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[1200] overflow-hidden rounded-2xl border border-[#d9d4bd] bg-white shadow-[0_18px_45px_rgb(30_52_29_/_18%)]">
+                  {searchSuggestions.length > 0 ? (
+                    <div className="max-h-72 overflow-y-auto p-2">
+                      {searchSuggestions.map((result) => (
+                        <button
+                          className="flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-[#f3f8ef]"
+                          key={result.place_id}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => selectSearchResult(result)}
+                          type="button"
+                        >
+                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#71b549]" aria-hidden="true" />
+                          <span className="min-w-0">
+                            <strong className="block truncate text-sm font-black text-[#16281e]">
+                              {searchResultLabel(result)}
+                            </strong>
+                            <span className="mt-0.5 block line-clamp-2 text-xs font-semibold text-[#6e765f]">
+                              {result.display_name}
+                            </span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="px-4 py-3 text-sm font-semibold text-[#6e765f]">
+                      {isSuggesting ? "Procurando regioes..." : "Nenhuma sugestao encontrada."}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <button
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-[#3b5e26] bg-[#3b5e26] px-5 text-sm font-extrabold text-white transition hover:bg-[#27461f] disabled:cursor-not-allowed disabled:opacity-60 lg:w-auto"
+              disabled={isSearching}
+              type="submit"
+            >
+              {isSearching ? (
+                <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Search className="h-4 w-4" aria-hidden="true" />
+              )}
+              Buscar
+            </button>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-[#6e765f]">
+              Atalhos
+            </span>
+            {regions.map((region) => (
+              <button
+                className="rounded-full border border-[#d9d4bd] bg-[#faf9f3] px-3 py-1.5 text-xs font-black text-[#3b5e26] transition hover:border-[#71b549] hover:bg-[#f3f8ef]"
+                key={`search-${region.name}`}
+                onClick={() => {
+                  setSearchQuery(areaLabel(region));
+                  selectRegion(region);
+                }}
+                type="button"
+              >
+                {areaLabel(region)}
+              </button>
+            ))}
+          </div>
+
+          {searchError && (
+            <p className="mt-2 text-sm font-semibold text-[#a94424]">{searchError}</p>
+          )}
+        </form>
 
         <div className="overflow-hidden rounded-[24px] border border-[#d9d4bd] bg-[#102417] shadow-[0_28px_80px_rgb(30_52_29_/_22%)]">
           <div className="relative h-[620px] min-[480px]:h-[580px] sm:h-[560px] lg:h-[680px]">
