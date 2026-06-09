@@ -443,3 +443,155 @@ def dragon_historico(
         if isinstance(item, dict):
             pontos.append({"tempo": item.get("recvTime"), "valor": item.get("attrValue")})
     return {"attr": attr, "pontos": pontos}
+
+# ---------------------------------------------------------------------------
+# Thresholds de alerta da Dragon
+# ---------------------------------------------------------------------------
+THRESHOLDS_DRAGON = {
+    "temperature": lambda v: v < 10 or v > 40,
+    "pressure":    lambda v: v < 700 or v > 1060,
+    "gas":         lambda v: v > 1500,
+    "radiation":   lambda v: v > 2.0,
+    "mag_flag":    lambda v: v == 1,
+    "propellant":  lambda v: v < 15,
+}
+
+# mapeamento atributo Orion -> parametro do comando no ESP32
+ATTR_PARA_CMD = {
+    "temperature": "temp",
+    "pressure":    "press",
+    "gas":         "gas",
+    "radiation":   "rad",
+    "mag_flag":    "mag",
+    "propellant":  "prop",
+}
+
+
+def _disparar_alerta_orion(endereco: str, param: str) -> bool:
+    """Envia o comando de alerta para o ESP32 via Orion Context Broker.
+
+    O Orion repassa o comando ao IoT Agent MQTT, que publica no tópico
+    /TEF/dragon001/cmd. O ESP32 recebe e aciona LED + buzzer.
+
+    Retorna True se o comando foi aceito, False caso contrário.
+    """
+    url = f"http://{endereco}:{PORTA_ORION}/v2/entities/{DRAGON_ID}/attrs"
+    cabecalhos = {
+        "Content-Type": "application/json",
+        "fiware-service": FIWARE_SERVICE,
+        "fiware-servicepath": FIWARE_SERVICEPATH,
+    }
+    payload = {
+        "alerta": {
+            "type": "command",
+            "value": param,
+        }
+    }
+    try:
+        resposta = requests.patch(url, json=payload, headers=cabecalhos, timeout=8)
+        return resposta.status_code in (200, 204)
+    except requests.RequestException:
+        return False
+
+
+@app.post("/api/dragon/alerta")
+def dragon_alerta(
+    param: str = Query(..., description="Parâmetro que disparou o alerta: temp, press, gas, rad, mag, prop"),
+    host: str = Query("", description="IP da VM do FIWARE (opcional)"),
+):
+    """Dispara manualmente um alerta para o ESP32 via FIWARE.
+
+    Envia o comando de alerta para o Orion, que repassa ao IoT Agent MQTT
+    e chega ao ESP32. O ESP32 aciona o LED e o buzzer correspondentes ao
+    parâmetro informado.
+    """
+    params_validos = list(ATTR_PARA_CMD.values())
+    if param not in params_validos:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Parâmetro inválido. Use um de: {', '.join(params_validos)}",
+        )
+    endereco = _resolver_host_fiware(host)
+    sucesso = _disparar_alerta_orion(endereco, param)
+    if not sucesso:
+        raise HTTPException(
+            status_code=502,
+            detail="Não foi possível enviar o alerta. Verifique o IP e se a VM está ativa.",
+        )
+    return {"alerta_enviado": True, "param": param}
+
+
+@app.get("/api/dragon/verificar")
+def dragon_verificar(
+    host: str = Query("", description="IP da VM do FIWARE (opcional)"),
+):
+    """Lê o estado atual da Dragon, verifica os thresholds e dispara alertas.
+
+    Para cada atributo monitorado, compara o valor atual com o threshold
+    definido. Se o valor estiver fora do range seguro, envia o comando de
+    alerta ao ESP32 via FIWARE automaticamente.
+
+    Retorna um resumo com os atributos em alerta e os que estão nominais.
+    Também verifica a magnitude da aceleração (ax² + ay² + az²) > 50 m/s².
+    """
+    endereco = _resolver_host_fiware(host)
+    url = f"http://{endereco}:{PORTA_ORION}/v2/entities/{DRAGON_ID}"
+    cabecalhos = {
+        "fiware-service": FIWARE_SERVICE,
+        "fiware-servicepath": FIWARE_SERVICEPATH,
+    }
+    try:
+        resposta = requests.get(url, headers=cabecalhos, timeout=8)
+        resposta.raise_for_status()
+        dados = resposta.json()
+    except (requests.RequestException, ValueError):
+        raise HTTPException(
+            status_code=502,
+            detail="Não foi possível ler a telemetria. Verifique o IP e se a VM está ativa.",
+        )
+
+    # Extrai os valores atuais
+    valores = {}
+    for atributo in ATRIBUTOS_DRAGON:
+        campo = dados.get(atributo)
+        valores[atributo] = campo.get("value") if isinstance(campo, dict) else None
+
+    em_alerta = []
+    nominais = []
+
+    # Verifica thresholds individuais
+    for attr, threshold_fn in THRESHOLDS_DRAGON.items():
+        valor = valores.get(attr)
+        if valor is None:
+            continue
+        try:
+            valor_num = float(valor)
+        except (TypeError, ValueError):
+            continue
+
+        if threshold_fn(valor_num):
+            cmd = ATTR_PARA_CMD[attr]
+            _disparar_alerta_orion(endereco, cmd)
+            em_alerta.append({"atributo": attr, "valor": valor_num, "comando": cmd})
+        else:
+            nominais.append({"atributo": attr, "valor": valor_num})
+
+    # Verifica magnitude da aceleração
+    try:
+        ax = float(valores.get("accel_x") or 0)
+        ay = float(valores.get("accel_y") or 0)
+        az = float(valores.get("accel_z") or 0)
+        magnitude = (ax**2 + ay**2 + az**2) ** 0.5
+        if magnitude > 50:
+            _disparar_alerta_orion(endereco, "accel")
+            em_alerta.append({"atributo": "aceleracao", "valor": round(magnitude, 2), "comando": "accel"})
+        else:
+            nominais.append({"atributo": "aceleracao", "valor": round(magnitude, 2)})
+    except (TypeError, ValueError):
+        pass
+
+    return {
+        "em_alerta": em_alerta,
+        "nominais": nominais,
+        "total_alertas": len(em_alerta),
+    }
