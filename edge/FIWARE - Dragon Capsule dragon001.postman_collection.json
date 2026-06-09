@@ -1,0 +1,1747 @@
+{
+  "info": {
+    "_postman_id": "0d9cab0a-783a-409a-8c2f-c55055c3ec96",
+    "name": "FIWARE - Dragon Capsule dragon001",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "53237423",
+    "_collection_link": "https://go.postman.co/collection/53237423-0d9cab0a-783a-409a-8c2f-c55055c3ec96?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "IOT Agent MQTT",
+      "item": [
+        {
+          "name": "1. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/about",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "about"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Provisioning Service Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"services\": [\n    {\n      \"apikey\":      \"TEF\",\n      \"cbroker\":     \"http://{{url}}:1026\",\n      \"entity_type\": \"Thing\",\n      \"resource\":    \"\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:4041/iot/services",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "services"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Provisioning Dragon Capsule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"devices\": [\n    {\n      \"device_id\":   \"dragon001\",\n      \"entity_name\": \"urn:ngsi-ld:Dragon:001\",\n      \"entity_type\": \"Dragon\",\n      \"protocol\":    \"PDI-IoTA-UltraLight\",\n      \"transport\":   \"MQTT\",\n      \"attributes\": [\n        { \"object_id\": \"temp\",     \"name\": \"temperature\",  \"type\": \"Float\"   },\n        { \"object_id\": \"press\",    \"name\": \"pressure\",      \"type\": \"Float\"   },\n        { \"object_id\": \"gas\",      \"name\": \"gas\",           \"type\": \"Integer\" },\n        { \"object_id\": \"mag\",      \"name\": \"heading\",       \"type\": \"Float\"   },\n        { \"object_id\": \"mag_flag\", \"name\": \"mag_flag\",      \"type\": \"Integer\" },\n        { \"object_id\": \"rad\",      \"name\": \"radiation\",     \"type\": \"Float\"   },\n        { \"object_id\": \"prop\",     \"name\": \"propellant\",    \"type\": \"Float\"   },\n        { \"object_id\": \"ax\",       \"name\": \"accel_x\",       \"type\": \"Float\"   },\n        { \"object_id\": \"ay\",       \"name\": \"accel_y\",       \"type\": \"Float\"   },\n        { \"object_id\": \"az\",       \"name\": \"accel_z\",       \"type\": \"Float\"   }\n      ],\n      \"commands\": [\n        { \"name\": \"alerta\", \"type\": \"command\" }\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:4041/iot/devices",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. List All Devices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/devices",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Delete Dragon no IoT Agent",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:4041/iot/devices/dragon001",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "4041",
+              "path": [
+                "iot",
+                "devices",
+                "dragon001"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Orion Context Broker",
+      "item": [
+        {
+          "name": "1. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:1026/version",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "version"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Get Estado Atual da Dragon",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Get Temperatura",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs/temperature",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs",
+                "temperature"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Get Pressão",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs/pressure",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs",
+                "pressure"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Get Gás",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs/gas",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs",
+                "gas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Get Heading Magnético",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs/heading",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs",
+                "heading"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Get Flag Magnética",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs/mag_flag",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs",
+                "mag_flag"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Get Radiação",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs/radiation",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs",
+                "radiation"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Get Propelente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs/propellant",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs",
+                "propellant"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10. Get Aceleração (X Y Z)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001?attrs=accel_x,accel_y,accel_z",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001"
+              ],
+              "query": [
+                {
+                  "key": "attrs",
+                  "value": "accel_x,accel_y,accel_z"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11. Delete Dragon no Orion",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Disparadores de Alerta",
+      "item": [
+        {
+          "name": "Alerta — Temperatura",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"temp\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Pressão",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"press\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Gás",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"gas\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Radiação",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"rad\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Campo Magnético",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"mag\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Propelente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"prop\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "STH-Comet (Histórico)",
+      "item": [
+        {
+          "name": "1. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://{{url}}:8666/version",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "version"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Subscrever Temperatura",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre temperatura\",\n  \"subject\": {\n    \"entities\": [ { \"id\": \"urn:ngsi-ld:Dragon:001\", \"type\": \"Dragon\" } ],\n    \"condition\": { \"attrs\": [\"temperature\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://sth-comet:8666/notify\" },\n    \"attrs\": [\"temperature\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Subscrever Pressão",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre pressao\",\n  \"subject\": {\n    \"entities\": [ { \"id\": \"urn:ngsi-ld:Dragon:001\", \"type\": \"Dragon\" } ],\n    \"condition\": { \"attrs\": [\"pressure\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://sth-comet:8666/notify\" },\n    \"attrs\": [\"pressure\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Subscrever Gás",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre gas\",\n  \"subject\": {\n    \"entities\": [ { \"id\": \"urn:ngsi-ld:Dragon:001\", \"type\": \"Dragon\" } ],\n    \"condition\": { \"attrs\": [\"gas\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://sth-comet:8666/notify\" },\n    \"attrs\": [\"gas\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Subscrever Heading Magnético",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre heading magnetico\",\n  \"subject\": {\n    \"entities\": [ { \"id\": \"urn:ngsi-ld:Dragon:001\", \"type\": \"Dragon\" } ],\n    \"condition\": { \"attrs\": [\"heading\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://sth-comet:8666/notify\" },\n    \"attrs\": [\"heading\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Subscrever Radiação",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre radiacao\",\n  \"subject\": {\n    \"entities\": [ { \"id\": \"urn:ngsi-ld:Dragon:001\", \"type\": \"Dragon\" } ],\n    \"condition\": { \"attrs\": [\"radiation\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://sth-comet:8666/notify\" },\n    \"attrs\": [\"radiation\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Subscrever Propelente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre propelente\",\n  \"subject\": {\n    \"entities\": [ { \"id\": \"urn:ngsi-ld:Dragon:001\", \"type\": \"Dragon\" } ],\n    \"condition\": { \"attrs\": [\"propellant\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://sth-comet:8666/notify\" },\n    \"attrs\": [\"propellant\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Subscrever Aceleração X",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre aceleracao X\",\n  \"subject\": {\n    \"entities\": [ { \"id\": \"urn:ngsi-ld:Dragon:001\", \"type\": \"Dragon\" } ],\n    \"condition\": { \"attrs\": [\"accel_x\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://sth-comet:8666/notify\" },\n    \"attrs\": [\"accel_x\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Subscrever Aceleração Y",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre aceleracao Y\",\n  \"subject\": {\n    \"entities\": [ { \"id\": \"urn:ngsi-ld:Dragon:001\", \"type\": \"Dragon\" } ],\n    \"condition\": { \"attrs\": [\"accel_y\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://sth-comet:8666/notify\" },\n    \"attrs\": [\"accel_y\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10. Subscrever Aceleração Z",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Notifica STH-Comet sobre aceleracao Z\",\n  \"subject\": {\n    \"entities\": [ { \"id\": \"urn:ngsi-ld:Dragon:001\", \"type\": \"Dragon\" } ],\n    \"condition\": { \"attrs\": [\"accel_z\"] }\n  },\n  \"notification\": {\n    \"http\": { \"url\": \"http://sth-comet:8666/notify\" },\n    \"attrs\": [\"accel_z\"],\n    \"attrsFormat\": \"legacy\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11. Histórico Temperatura (últimos 30)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/Dragon/id/urn:ngsi-ld:Dragon:001/attributes/temperature?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "Dragon",
+                "id",
+                "urn:ngsi-ld:Dragon:001",
+                "attributes",
+                "temperature"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12. Histórico Pressão (últimos 30)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/Dragon/id/urn:ngsi-ld:Dragon:001/attributes/pressure?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "Dragon",
+                "id",
+                "urn:ngsi-ld:Dragon:001",
+                "attributes",
+                "pressure"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "13. Histórico Gás (últimos 30)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/Dragon/id/urn:ngsi-ld:Dragon:001/attributes/gas?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "Dragon",
+                "id",
+                "urn:ngsi-ld:Dragon:001",
+                "attributes",
+                "gas"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "14. Histórico Heading (últimos 30)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/Dragon/id/urn:ngsi-ld:Dragon:001/attributes/heading?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "Dragon",
+                "id",
+                "urn:ngsi-ld:Dragon:001",
+                "attributes",
+                "heading"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "15. Histórico Radiação (últimos 30)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/Dragon/id/urn:ngsi-ld:Dragon:001/attributes/radiation?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "Dragon",
+                "id",
+                "urn:ngsi-ld:Dragon:001",
+                "attributes",
+                "radiation"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "16. Histórico Propelente (últimos 30)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:8666/STH/v1/contextEntities/type/Dragon/id/urn:ngsi-ld:Dragon:001/attributes/propellant?lastN=30",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "8666",
+              "path": [
+                "STH",
+                "v1",
+                "contextEntities",
+                "type",
+                "Dragon",
+                "id",
+                "urn:ngsi-ld:Dragon:001",
+                "attributes",
+                "propellant"
+              ],
+              "query": [
+                {
+                  "key": "lastN",
+                  "value": "30"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "17. Listar Subscriptions Ativas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "18. Deletar Subscription por ID",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "url": {
+              "raw": "http://{{url}}:1026/v2/subscriptions/{{subscription_id}}",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "subscriptions",
+                "{{subscription_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Disparadores de Alerta",
+      "item": [
+        {
+          "name": "Alerta — Temperatura",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"temp\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Pressão",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"press\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Gás",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"gas\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Radiação",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"rad\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Campo Magnético",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"mag\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Propelente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"prop\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerta — Aceleração",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "fiware-service",
+                "value": "smart"
+              },
+              {
+                "key": "fiware-servicepath",
+                "value": "/"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alerta\": {\n    \"type\": \"command\",\n    \"value\": \"accel\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://{{url}}:1026/v2/entities/urn:ngsi-ld:Dragon:001/attrs",
+              "protocol": "http",
+              "host": [
+                "{{url}}"
+              ],
+              "port": "1026",
+              "path": [
+                "v2",
+                "entities",
+                "urn:ngsi-ld:Dragon:001",
+                "attrs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "url",
+      "value": "34.39.176.77"
+    }
+  ]
+}
