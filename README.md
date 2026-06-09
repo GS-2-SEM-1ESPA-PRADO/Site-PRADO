@@ -486,7 +486,6 @@ Tailwind).
 
 | Nome | Função |
 |------|--------|
-| Prof. Fábio Henrique Cabrini | Código base e FIWARE Descomplicado |
 | Gabriel Ardito | Desenvolvimento |
 | Felipe Menezes | Desenvolvimento |
 | João Sarracine | Desenvolvimento |

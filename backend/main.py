@@ -53,6 +53,19 @@ CAMADAS_MAPA: dict[str, str] = {
     "nuvens": "clouds_new",
 }
 
+FIWARE_URL_PADRAO = os.getenv("FIWARE_URL", "")
+FIWARE_SERVICE = "smart"
+FIWARE_SERVICEPATH = "/"
+PORTA_ORION = 1026
+PORTA_STH = 8666
+DRAGON_ID = "urn:ngsi-ld:Dragon:001"
+DRAGON_TYPE = "Dragon"
+
+ATRIBUTOS_DRAGON = (
+    "temperature", "pressure", "gas", "heading", "mag_flag",
+    "radiation", "propellant", "accel_x", "accel_y", "accel_z",
+)
+
 # Garante que as pastas e o arquivo de usuários existam ao iniciar.
 storage.garantir_estrutura()
 
@@ -356,3 +369,77 @@ def listar_alertas(token: str = Query(..., description="Token de sessão")) -> d
     usuario: dict = exigir_usuario(token)
     dados: dict = storage.carregar_dados_usuario(usuario["email"])
     return {"alertas": dados["alertas"]}
+
+def _resolver_host_fiware(host):
+    """Usa o IP digitado na página; se vazio, cai no valor do .env."""
+    endereco = (host or "").strip() or FIWARE_URL_PADRAO
+    if not endereco:
+        raise HTTPException(
+            status_code=400,
+            detail="Informe o IP da VM do FIWARE (na página ou no arquivo .env).",
+        )
+    return endereco
+
+
+@app.get("/api/dragon/atual")
+def dragon_atual(host: str = Query("", description="IP da VM do FIWARE (opcional)")):
+    """Lê o estado atual da cápsula no Orion Context Broker (proxy)."""
+    endereco = _resolver_host_fiware(host)
+    url = f"http://{endereco}:{PORTA_ORION}/v2/entities/{DRAGON_ID}"
+    cabecalhos = {
+        "fiware-service": FIWARE_SERVICE,
+        "fiware-servicepath": FIWARE_SERVICEPATH,
+    }
+    try:
+        resposta = requests.get(url, headers=cabecalhos, timeout=8)
+        resposta.raise_for_status()
+        dados = resposta.json()
+    except (requests.RequestException, ValueError):
+        raise HTTPException(
+            status_code=502,
+            detail="Não foi possível ler a telemetria. Verifique o IP e se a VM está ativa.",
+        )
+    valores = {}
+    for atributo in ATRIBUTOS_DRAGON:
+        campo = dados.get(atributo)
+        valores[atributo] = campo.get("value") if isinstance(campo, dict) else None
+    return {"entidade": DRAGON_ID, "valores": valores}
+
+
+@app.get("/api/dragon/historico")
+def dragon_historico(
+    attr: str = Query(..., description="Nome do atributo (ex.: temperature)"),
+    host: str = Query("", description="IP da VM do FIWARE (opcional)"),
+    lastN: int = Query(30, ge=1, le=100, description="Quantos pontos retornar"),
+):
+    """Lê o histórico de um sensor no STH-Comet (proxy)."""
+    if attr not in ATRIBUTOS_DRAGON:
+        raise HTTPException(status_code=404, detail="Atributo desconhecido.")
+    endereco = _resolver_host_fiware(host)
+    url = (
+        f"http://{endereco}:{PORTA_STH}/STH/v1/contextEntities"
+        f"/type/{DRAGON_TYPE}/id/{DRAGON_ID}/attributes/{attr}"
+    )
+    cabecalhos = {
+        "fiware-service": FIWARE_SERVICE,
+        "fiware-servicepath": FIWARE_SERVICEPATH,
+    }
+    try:
+        resposta = requests.get(url, headers=cabecalhos, params={"lastN": lastN}, timeout=8)
+    except requests.RequestException:
+        raise HTTPException(
+            status_code=502,
+            detail="Não foi possível ler o histórico. Verifique o IP e se a VM está ativa.",
+        )
+    if resposta.status_code == 404:
+        return {"attr": attr, "pontos": []}
+    try:
+        dados = resposta.json()
+        valores = dados["contextResponses"][0]["contextElement"]["attributes"][0]["values"]
+    except (ValueError, KeyError, IndexError, TypeError):
+        return {"attr": attr, "pontos": []}
+    pontos = []
+    for item in valores:
+        if isinstance(item, dict):
+            pontos.append({"tempo": item.get("recvTime"), "valor": item.get("attrValue")})
+    return {"attr": attr, "pontos": pontos}

@@ -173,3 +173,17 @@ export async function buscarAlertas() {
   const dados = await requisitar(`/api/alertas?${parametros.toString()}`);
   return dados.alertas;
 }
+
+// Telemetria da cápsula Dragon (página Edge).
+// O parâmetro "host" é o IP da VM; vazio = backend usa o do .env.
+export async function buscarDragonAtual(host = "") {
+  const parametros = new URLSearchParams();
+  if (host) parametros.set("host", host);
+  return requisitar(`/api/dragon/atual?${parametros.toString()}`);
+}
+
+export async function buscarDragonHistorico(attr, host = "", lastN = 30) {
+  const parametros = new URLSearchParams({ attr, lastN: String(lastN) });
+  if (host) parametros.set("host", host);
+  return requisitar(`/api/dragon/historico?${parametros.toString()}`);
+}
