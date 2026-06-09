@@ -18,6 +18,7 @@ mapas, indicadores coloridos e alertas objetivos.
 - [Visão geral do sistema](#visão-geral-do-sistema)
 - [Tecnologias](#tecnologias)
 - [Arquitetura](#arquitetura)
+- [Dragon Capsule — IoT](#dragon-capsule--iot)
 - [Estrutura do repositório](#estrutura-do-repositório)
 - [Fluxo de dados completo](#fluxo-de-dados-completo)
 - [Pré-requisitos](#pré-requisitos)
@@ -77,50 +78,71 @@ O sistema opera em duas camadas:
 
 ## Arquitetura
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Navegador (cliente)                    │
-│                                                          │
-│  ┌──────────┐  ┌──────────────┐  ┌───────────────────┐ │
-│  │  Home    │  │  Dashboard   │  │   Mapa / Auth /    │ │
-│  │  (land)  │  │  (mapa +     │  │   Dicas / Sobre   │ │
-│  │          │  │   métricas)  │  │                   │ │
-│  └──────────┘  └──────┬───────┘  └───────────────────┘ │
-│                       │                                  │
-│              ┌────────▼────────┐                         │
-│              │   lib/api.js    │ ← comunicação única     │
-│              │  (fetch + auth) │                         │
-│              └────────┬────────┘                         │
-└───────────────────────┼─────────────────────────────────┘
-                        │ HTTP
-                        ▼
-┌─────────────────────────────────────────────────────────┐
-│              Backend FastAPI (localhost:8000)             │
-│                                                          │
-│  ┌─────────────┐   ┌────────────┐   ┌────────────────┐ │
-│  │  main.py    │──>│ climate.py │──>│  Open-Meteo    │ │
-│  │  (rotas)    │   │ (processa) │   │  (previsão)    │ │
-│  │             │   └────────────┘   └────────────────┘ │
-│  │             │   ┌────────────┐   ┌────────────────┐ │
-│  │             │──>│ storage.py │──>│  JSON local    │ │
-│  │             │   │ (persiste) │   │  (data/)       │ │
-│  └──────┬──────┘   └────────────┘   └────────────────┘ │
-│         │                                                │
-│         └──────────────┬─────────────────────────────────┘
-│                        ▼
-│              ┌──────────────────────┐
-│              │  OpenWeatherMap      │
-│              │  (clima atual/tiles) │
-│              └──────────────────────┘
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph IOT["IoT — Dragon Capsule (ESP32)"]
+        SENS["Sensores\nBMP085 · MPU6050 · MQ-2\nUltrassônico · HMC5883 · Radiação"]
+        ESP["ESP32\ndragon.ino"]
+        SENS -->|I²C / ADC| ESP
+    end
+
+    subgraph FIWARE["FIWARE Descomplicado"]
+        MQTT["Broker MQTT\n35.198.53.90:1883"]
+        CTX["Context Broker\n/TEF/dragon001/attrs"]
+        MQTT --> CTX
+    end
+
+    ESP -->|"Ultralight 2.0\nMQTT pub — a cada 5 s"| MQTT
+    CTX -->|"cmd: alerta\|param"| ESP
+
+    subgraph BACKEND["Backend — FastAPI · localhost:8000"]
+        MAIN["main.py\n(rotas)"]
+        CLIMATE["climate.py\n(indicadores agronômicos)"]
+        STORAGE["storage.py\n(persistência JSON)"]
+        MAIN --> CLIMATE
+        MAIN --> STORAGE
+    end
+
+    subgraph EXT["APIs Externas"]
+        OPENMETEO["Open-Meteo\n18 variáveis × 24 h"]
+        OWM["OpenWeatherMap\nclima atual + map tiles"]
+    end
+
+    CLIMATE -->|"GET previsão"| OPENMETEO
+    MAIN -->|"GET clima / tiles"| OWM
+    STORAGE -->|"lê / grava"| JSON[("data/\nusers.json\nusuarios/")]
+
+    subgraph FRONTEND["Frontend — React/Vite · localhost:5173"]
+        API["lib/api.js\n(fetch + auth token)"]
+        DASH["Dashboard\n(mapa + métricas)"]
+        EDGE["/edge\n(gráficos Dragon)"]
+        OUTRAS["Home · Auth · Dicas · Sobre"]
+        API --> DASH
+        API --> EDGE
+        API --> OUTRAS
+    end
+
+    BACKEND -->|"REST JSON"| API
+    CTX -.->|"polling / SSE\n(dados Dragon)"| EDGE
 ```
 
 ### Papéis de cada camada
+
+**IoT — Dragon Capsule (ESP32):**
+- Lê temperatura, pressão, gás, aceleração, campo magnético, radiação e nível de propelente
+- Publica telemetria via **MQTT Ultralight 2.0** a cada 5 segundos no broker FIWARE
+- Recebe comandos de alerta (`alerta|temp`, `alerta|gas`, etc.) e aciona LED RGB + buzzer
+
+**FIWARE Descomplicado:**
+- Broker MQTT centraliza as mensagens do Dragon
+- Context Broker armazena o estado atual de cada atributo
+- Disponibiliza os dados para o frontend via polling ou SSE
 
 **Front-end:**
 - Renderiza a interface do usuário (mapas, formulários, cards)
 - Gerencia sessão do usuário via `localStorage`
 - Nunca chama APIs externas diretamente — toda comunicação passa pelo backend
+- `/edge`: página dedicada aos gráficos em tempo real da Dragon Capsule (temperatura, pressão, gás, aceleração, radiação, propelente, campo magnético)
 - Mantém dados de demonstração locais para quando o backend está offline
 
 **Backend:**
@@ -128,6 +150,46 @@ O sistema opera em duas camadas:
 - **Processa** dados brutos em indicadores agronômicos
 - **Persiste** dados de usuário em arquivos JSON
 - **Falha graciosamente**: se uma API externa não responde, retorna dados de demonstração
+
+---
+
+## Dragon Capsule — IoT
+
+O **Dragon** é um dispositivo ESP32 que atua como estação de telemetria embarcada.
+Conecta-se ao broker FIWARE via MQTT (Ultralight 2.0) e publica 10 atributos a cada 5 segundos.
+
+### Sensores e atributos publicados
+
+| Atributo MQTT | Sensor | Descrição |
+|---|---|---|
+| `temp` | BMP085 | Temperatura (°C) |
+| `press` | BMP085 | Pressão atmosférica (hPa) |
+| `gas` | MQ-2 (analógico) | Concentração de gás (ADC 0–4095) |
+| `mag` | HMC5883L | Heading magnético (°) |
+| `mag_flag` | HMC5883L | Desvio > 30° da referência (0/1) |
+| `rad` | I²C 0x48 | Radiação estimada (mSv/h) |
+| `prop` | HC-SR04 | Nível de propelente no tanque (%) |
+| `ax` / `ay` / `az` | MPU6050 | Aceleração nos 3 eixos (m/s²) |
+
+### Alertas recebidos pelo dispositivo
+
+O FIWARE pode enviar comandos no tópico `/TEF/dragon001/cmd` no formato `dragon001@alerta|<param>`.
+O Dragon responde com LED RGB + buzzer conforme a tabela abaixo:
+
+| Parâmetro | Cor do LED | Padrão sonoro |
+|---|---|---|
+| `temp` | Vermelho | Beep longo |
+| `press` | Amarelo | Beep duplo |
+| `gas` | Roxo | 5 beeps rápidos |
+| `rad` | Branco | Beep alternado |
+| `mag` | Azul | Beep curto |
+| `prop` | Laranja | Beep triplo |
+
+### Página `/edge`
+
+A rota `/edge` do frontend exibe gráficos em tempo real com os dados publicados pelo Dragon,
+consumindo o Context Broker do FIWARE via polling ou SSE. Indicado para monitoramento
+contínuo da cápsula durante operação.
 
 ---
 
