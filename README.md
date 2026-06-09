@@ -76,11 +76,6 @@ O sistema opera em duas camadas:
 
 ---
 
-## Arquitetura IOT
-<p align="center">
-  <img src="frontend/src/assets/architeture.png" alt="Arquitetura do Sistema" width="700">
-</p>
-
 ## Fluxo de dados
 ```mermaid
 flowchart TD
@@ -162,6 +157,11 @@ flowchart TD
 O **Dragon** é um dispositivo ESP32 que atua como estação de telemetria embarcada.
 Conecta-se ao broker FIWARE via MQTT (Ultralight 2.0) e publica 10 atributos a cada 5 segundos.
 
+## Arquitetura IOT
+<p align="center">
+  <img src="frontend/src/assets/architeture.png" alt="Arquitetura do Sistema" width="700">
+</p>
+
 ### Sensores e atributos publicados
 
 | Atributo MQTT | Sensor | Descrição |
@@ -195,6 +195,11 @@ A rota `/edge` do frontend exibe gráficos em tempo real com os dados publicados
 consumindo o Context Broker do FIWARE via polling ou SSE. Indicado para monitoramento
 contínuo da cápsula durante operação.
 
+### Simulação Wokwi
+
+A simulação completa dos sensores e da telemetria da nave pode ser acessada no Wokwi:
+
+🔗 https://wokwi.com/projects/466317821989572609
 ---
 
 ## Estrutura do repositório
