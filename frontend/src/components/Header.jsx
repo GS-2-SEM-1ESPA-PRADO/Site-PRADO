@@ -8,6 +8,7 @@ const navigationItems = [
   { label: "Dashboard", to: "/dashboard" },
   { label: "Alertas", to: "/alertas" },
   { label: "Dicas", to: "/dicas" },
+  { label: "Edge", to: "/edge" },
   { label: "Sobre", to: "/sobre" },
 ];
 
