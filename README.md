@@ -314,6 +314,7 @@ node --version     # deve retornar v18+
 ## Como rodar
 
 O projeto exige **dois terminais rodando simultaneamente**.
+para conectar com a Dragon, utilizar o ip 34.60.152.5
 
 ### Terminal 1 — Backend
 
@@ -493,13 +494,13 @@ Tailwind).
 
 ## Integrantes
 
-| Nome | Função |
-|------|--------|
-| Gabriel Ardito | Desenvolvimento |
-| Felipe Menezes | Desenvolvimento |
-| João Sarracine | Desenvolvimento |
-| João Gonzales | Desenvolvimento |
-| Roger Paiva | Desenvolvimento |
+| Nome | Função | RM |
+|------|--------|--------|
+| Gabriel Ardito | Desenvolvimento | RM568318 |
+| Felipe Menezes | Desenvolvimento | RM566607 |
+| João Sarracine | Desenvolvimento | RM568318 |
+| João Gonzales | Desenvolvimento | RM568166 |
+| Roger Paiva | Desenvolvimento | RM566949 |
 
 ---
 
