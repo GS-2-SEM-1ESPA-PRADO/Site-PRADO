@@ -1,3 +1,25 @@
+"""
+main.py
+=======
+
+Aplicação principal do backend PRADO (FastAPI).
+
+Este arquivo expõe a API REST consumida pelo front-end React. Ele atua
+como uma ponte entre a interface e o mundo externo:
+
+- Faz o cadastro e o login simples dos usuários (cada um com seu JSON).
+- Consulta as APIs de clima por baixo dos panos (proxy), de modo que as
+  chaves de acesso e a complexidade fiquem no servidor, não no navegador.
+- Processa os dados com o módulo ``climate`` e guarda histórico,
+  favoritos e alertas de cada usuário com o módulo ``storage``.
+
+Para rodar:
+
+    uvicorn main:app --reload
+
+A API sobe por padrão em http://localhost:8000.
+"""
+
 import asyncio
 import os
 import uuid
