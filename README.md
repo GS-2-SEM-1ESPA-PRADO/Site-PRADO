@@ -494,12 +494,12 @@ Tailwind).
 ## Integrantes
 
 | Nome | Função | RM |
-|------|--------|
-| Gabriel Ardito | Desenvolvimento | RM 568318 |
-| Felipe Menezes | Desenvolvimento | RM 566607 |
-| João Sarracine | Desenvolvimento | RM 568318 |
-| João Gonzales | Desenvolvimento |RM 568166 |
-| Roger Paiva | Desenvolvimento | RM566949|
+|------|--------|--------|
+| Gabriel Ardito | Desenvolvimento | RM568318 |
+| Felipe Menezes | Desenvolvimento | RM566607 |
+| João Sarracine | Desenvolvimento | RM568318 |
+| João Gonzales | Desenvolvimento | RM568166 |
+| Roger Paiva | Desenvolvimento | RM566949 |
 
 ---
 
