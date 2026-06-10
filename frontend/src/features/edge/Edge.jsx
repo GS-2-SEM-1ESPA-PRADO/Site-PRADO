@@ -298,7 +298,7 @@ function Edge() {
             )}
           </div>
           <p className="mt-3 text-xs text-[#3d4637]/50">
-            Deixe o campo vazio para usar o IP configurado no servidor
+            DDigite o ip de uma vm previamente configurada, ou 34.60.152.5 para usar o host padrão
             (arquivo <code className="text-[#3d4637]/70">.env</code>). O valor digitado aqui tem prioridade.
           </p>
         </div>
