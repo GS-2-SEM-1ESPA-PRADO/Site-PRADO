@@ -314,6 +314,7 @@ node --version     # deve retornar v18+
 ## Como rodar
 
 O projeto exige **dois terminais rodando simultaneamente**.
+para conectar com a Dragon, utilizar o ip 34.60.152.5
 
 ### Terminal 1 — Backend
 
