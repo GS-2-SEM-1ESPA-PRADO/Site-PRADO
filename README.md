@@ -190,6 +190,7 @@ O Dragon responde com LED RGB + buzzer conforme a tabela abaixo:
 | `prop` | Laranja | Beep triplo |
 
 ### Página `/edge`
+Nota: ao testar, favor utilizar o ip: 34.60.152.5
 
 A rota `/edge` do frontend exibe gráficos em tempo real com os dados publicados pelo Dragon,
 consumindo o Context Broker do FIWARE via polling ou SSE. Indicado para monitoramento
