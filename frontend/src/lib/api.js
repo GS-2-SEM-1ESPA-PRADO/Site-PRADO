@@ -157,6 +157,13 @@ export async function buscarAlertas() {
 // Telemetria da cápsula Dragon (página Edge)
 // -----------------------------------------------------------------------------
 
+export async function configurarDragonHost(host) {
+  const parametros = new URLSearchParams({ host });
+  return requisitar(`/api/dragon/configurar?${parametros.toString()}`, {
+    method: "POST",
+  });
+}
+
 export async function buscarDragonAtual(host = "") {
   const parametros = new URLSearchParams();
   if (host) parametros.set("host", host);

@@ -1,25 +1,3 @@
-"""
-main.py
-=======
-
-Aplicação principal do backend PRADO (FastAPI).
-
-Este arquivo expõe a API REST consumida pelo front-end React. Ele atua
-como uma ponte entre a interface e o mundo externo:
-
-- Faz o cadastro e o login simples dos usuários (cada um com seu JSON).
-- Consulta as APIs de clima por baixo dos panos (proxy), de modo que as
-  chaves de acesso e a complexidade fiquem no servidor, não no navegador.
-- Processa os dados com o módulo ``climate`` e guarda histórico,
-  favoritos e alertas de cada usuário com o módulo ``storage``.
-
-Para rodar:
-
-    uvicorn main:app --reload
-
-A API sobe por padrão em http://localhost:8000.
-"""
-
 import asyncio
 import os
 import uuid
@@ -490,6 +468,15 @@ def _resolver_host_fiware(host):
             detail="Informe o IP da VM do FIWARE (na página ou no arquivo .env).",
         )
     return endereco
+
+
+
+@app.post("/api/dragon/configurar")
+def dragon_configurar(host: str = Query(..., description="IP da VM do FIWARE")):
+    """Configura o IP do FIWARE usado pelo scheduler em background."""
+    global FIWARE_URL_PADRAO
+    FIWARE_URL_PADRAO = host.strip()
+    return {"configurado": FIWARE_URL_PADRAO}
 
 
 @app.get("/api/dragon/atual")

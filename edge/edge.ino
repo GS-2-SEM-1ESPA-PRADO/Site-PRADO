@@ -12,7 +12,7 @@
 
 const char* SSID        = "Wokwi-GUEST";
 const char* PASSWORD    = "";
-const char* BROKER_MQTT = "34.95.208.44";
+const char* BROKER_MQTT = "34.60.152.5";
 const int   BROKER_PORT = 1883;
 const char* ID_MQTT     = "dragon-capsule-001";
 

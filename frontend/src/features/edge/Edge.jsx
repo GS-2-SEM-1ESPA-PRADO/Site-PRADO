@@ -15,7 +15,7 @@ import {
   ShieldAlert,
   CheckCircle2,
 } from "lucide-react";
-import { buscarDragonAtual, buscarDragonHistorico } from "../../lib/api.js";
+import { buscarDragonAtual, buscarDragonHistorico, configurarDragonHost } from "../../lib/api.js";
 
 const CHAVE_HOST = "prado_fiware_host";
 const INTERVALO_MS = 3000;
@@ -143,7 +143,7 @@ function MiniGrafico({ valores, criticidade }) {
 }
 
 function Edge() {
-  const [host, setHost]                     = useState(() => localStorage.getItem(CHAVE_HOST) || "");
+  const [host, setHost]                     = useState(() => localStorage.getItem(CHAVE_HOST) || "34.60.152.5");
   const [conectado, setConectado]           = useState(false);
   const [valores, setValores]               = useState({});
   const [historicos, setHistoricos]         = useState({});
@@ -182,11 +182,14 @@ function Edge() {
     return () => { clearTimeout(inicial); clearInterval(id); };
   }, [conectado, atualizar]);
 
-  function conectar() {
+  async function conectar() {
     const limpo = host.trim();
     localStorage.setItem(CHAVE_HOST, limpo);
     hostConectadoRef.current = limpo;
     setErro("");
+    if (limpo) {
+      try { await configurarDragonHost(limpo); } catch (_) {}
+    }
     setConectado(true);
   }
 
@@ -259,7 +262,7 @@ function Edge() {
               <input
                 className="h-12 w-full bg-transparent text-[#182116] outline-none placeholder:text-[#3d4637]/40"
                 type="text"
-                placeholder="Ex.: 34.39.176.77  (vazio = usar o IP do servidor)"
+                placeholder="Ex.: 34.39.176.77  (vazio = usar configuração do servidor)"
                 value={host}
                 onChange={(e) => setHost(e.target.value)}
               />
@@ -306,7 +309,7 @@ function Edge() {
             <AlertTriangle className="h-5 w-5 flex-none text-[#ef8b6a]" aria-hidden="true" />
             <div>
               <p className="text-sm font-bold text-[#ef8b6a]">{erro}</p>
-             <p className="mt-1 text-xs text-[#3d4637]/50">
+              <p className="mt-1 text-xs text-white/50">
                 Confira se o IP está correto, se a VM está ligada e se as portas 1026 e 8666 estão acessíveis.
               </p>
             </div>
