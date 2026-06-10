@@ -493,13 +493,13 @@ Tailwind).
 
 ## Integrantes
 
-| Nome | Função |
+| Nome | Função | RM |
 |------|--------|
-| Gabriel Ardito | Desenvolvimento |
-| Felipe Menezes | Desenvolvimento |
-| João Sarracine | Desenvolvimento |
-| João Gonzales | Desenvolvimento |
-| Roger Paiva | Desenvolvimento |
+| Gabriel Ardito | Desenvolvimento | RM 568318 |
+| Felipe Menezes | Desenvolvimento | RM 566607 |
+| João Sarracine | Desenvolvimento | RM 568318 |
+| João Gonzales | Desenvolvimento |RM 568166 |
+| Roger Paiva | Desenvolvimento | RM566949|
 
 ---
 
